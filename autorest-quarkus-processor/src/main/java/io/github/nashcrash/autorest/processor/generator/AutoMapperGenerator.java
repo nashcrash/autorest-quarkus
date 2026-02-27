@@ -48,6 +48,7 @@ public class AutoMapperGenerator {
 
         MethodSpec.Builder createMethod = MethodSpec.methodBuilder("addExtraEntityData")
                 .addAnnotation(ClassName.get(Override.class))
+                .addAnnotation(ClassName.get("org.mapstruct", "AfterMapping"))
                 .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
                 .returns(TypeName.VOID)
                 .addParameter(entityType, "entity")

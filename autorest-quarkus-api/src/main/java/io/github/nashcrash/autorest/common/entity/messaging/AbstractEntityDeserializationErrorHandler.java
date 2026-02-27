@@ -1,5 +1,6 @@
 package io.github.nashcrash.autorest.common.entity.messaging;
 
+import io.github.nashcrash.autorest.common.entity.AbstractDTO;
 import io.github.nashcrash.autorest.common.entity.AbstractEntity;
 import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
@@ -9,7 +10,7 @@ import org.apache.kafka.common.header.Headers;
 import java.time.Duration;
 import java.util.Arrays;
 
-public abstract class AbstractEntityDeserializationErrorHandler<DTO extends AbstractEntity> implements DeserializationFailureHandler<DTO> {
+public abstract class AbstractEntityDeserializationErrorHandler<DTO extends AbstractDTO> implements DeserializationFailureHandler<DTO> {
 
     @Override
     public DTO decorateDeserialization(
