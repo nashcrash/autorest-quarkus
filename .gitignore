@@ -248,3 +248,8 @@ $RECYCLE.BIN/
 
 # Environment file
 .env
+
+#maven settings
+/.settings.xml
+/autorest-test/
+/.idea/
