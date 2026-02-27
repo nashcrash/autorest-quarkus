@@ -3,7 +3,7 @@ Automatically generates a full CRUD REST API for the annotated entity.
 
 Per deployare:
 ```commandline
-mvn deploy -P release
+mvn deploy -P release -s .settings.xml
 ```
 
 Assicurarsi che la chiave sia nel secret store:

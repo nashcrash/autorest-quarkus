@@ -7,8 +7,30 @@
         <artifactId>autorest-quarkus-parent</artifactId>
         <version>1.0.0</version>
     </parent>
-
     <artifactId>autorest-quarkus-processor</artifactId>
+
+    <name>Autorest Quarkus API</name>
+    <description>Automatically generates a full CRUD REST API for the annotated entity.</description>
+    <url>https://sitissimo.it/</url>
+    <developers>
+        <developer>
+            <name>Salvatore De Bonis</name>
+            <email>salvatore.debonis@sitissimo.it</email>
+        </developer>
+    </developers>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:git://github.com/nashcrash/autorest-quarkus.git</connection>
+        <developerConnection>scm:git:ssh://github.com:nashcrash/autorest-quarkus.git</developerConnection>
+        <url>https://github.com/nashcrash/autorest-quarkus/tree/main</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
