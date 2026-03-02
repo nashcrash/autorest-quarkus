@@ -41,36 +41,4 @@ public class FindDTO {
     public Integer getLimit() {
         return limit <= 0 ? DEFAULT_LIMIT : limit;
     }
-
-    @JsonIgnore
-    public Sort getSort() {
-        Sort sort = Sort.empty();
-        if (orderBy != null && orderDirection == null)
-            throw new CustomException(Response.Status.BAD_REQUEST, EM_MISSING_ORDER_DIRECTION);
-        if (orderBy != null && orderBy.length != orderDirection.length)
-            throw new CustomException(Response.Status.BAD_REQUEST, EM_INSUFFICIENT_ORDER_DIRECTION);
-        if (orderBy != null) {
-            for (int i = 0; i < orderBy.length; i++) {
-                sort = sort.and(orderBy[i], ORDER_DESC.equalsIgnoreCase(orderDirection[i]) ? Sort.Direction.Descending : Sort.Direction.Ascending);
-            }
-        }
-        return sort;
-    }
-
-    @JsonIgnore
-    public Bson getBsonSort() {
-        Bson sort = Sorts.ascending("_id");
-        if (orderBy != null && orderDirection == null)
-            throw new CustomException(Response.Status.BAD_REQUEST, EM_MISSING_ORDER_DIRECTION);
-        if (orderBy != null && orderBy.length != orderDirection.length)
-            throw new CustomException(Response.Status.BAD_REQUEST, EM_INSUFFICIENT_ORDER_DIRECTION);
-        if (orderBy != null && orderBy.length > 0) {
-            List<Bson> sorts = new ArrayList<>();
-            for (int i = 0; i < orderBy.length; i++) {
-                sorts.add(ORDER_DESC.equalsIgnoreCase(orderDirection[i]) ? Sorts.descending(orderBy[i]) : Sorts.ascending(orderBy[i]));
-            }
-            sort = Sorts.orderBy(sorts);
-        }
-        return sort;
-    }
 }

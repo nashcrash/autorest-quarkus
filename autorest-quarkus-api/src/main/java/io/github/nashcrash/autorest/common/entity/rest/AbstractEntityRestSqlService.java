@@ -2,6 +2,7 @@ package io.github.nashcrash.autorest.common.entity.rest;
 
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
+import io.github.nashcrash.autorest.common.util.PipelineUtils;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
 import jakarta.inject.Inject;
@@ -43,7 +44,7 @@ public class AbstractEntityRestSqlService<ENTITY extends AbstractEntity, DTO ext
     }
 
     public List<DTO> search(FindDTO findDTO) {
-        Sort sort = findDTO.getSort();
+        Sort sort = PipelineUtils.getSort(findDTO);
         PanacheQuery<ENTITY> entityPanacheQuery;
         if (StringUtils.isNotBlank(findDTO.getQuery())) {
             entityPanacheQuery = repository.find(findDTO.getQuery(), sort);

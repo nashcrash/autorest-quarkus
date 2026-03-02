@@ -1,12 +1,12 @@
 package io.github.nashcrash.autorest.common.util;
 
-import com.mongodb.client.model.Accumulators;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.BsonField;
-import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.*;
 import io.github.nashcrash.autorest.common.entity.AccumulatorType;
 import io.github.nashcrash.autorest.common.entity.FieldPair;
 import io.github.nashcrash.autorest.common.entity.FindDTO;
+import io.github.nashcrash.autorest.common.exception.CustomException;
+import io.quarkus.panache.common.Sort;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.BsonDocument;
 import org.bson.Document;
@@ -51,7 +51,7 @@ public class PipelineUtils {
 
         pipeline.add(Aggregates.project(Projections.fields(projections))); //Add projection
 
-        pipeline.add(Aggregates.sort(findDTO.getBsonSort()));
+        pipeline.add(Aggregates.sort(getBsonSort(findDTO)));
         pipeline.add(Aggregates.skip(findDTO.getPage() * findDTO.getLimit()));
         pipeline.add(Aggregates.limit(findDTO.getLimit()));
 
@@ -67,5 +67,35 @@ public class PipelineUtils {
             case AccumulatorType.COUNT -> Accumulators.sum(value.getTargetField(), 1);
             case null -> throw new IllegalArgumentException("Accumulator type cannot be null");
         };
+    }
+
+    public static Sort getSort(FindDTO findDTO) {
+        Sort sort = Sort.empty();
+        if (findDTO.getOrderBy() != null && findDTO.getOrderDirection() == null)
+            throw new CustomException(Response.Status.BAD_REQUEST, FindDTO.EM_MISSING_ORDER_DIRECTION);
+        if (findDTO.getOrderBy() != null && findDTO.getOrderBy().length != findDTO.getOrderDirection().length)
+            throw new CustomException(Response.Status.BAD_REQUEST, FindDTO.EM_INSUFFICIENT_ORDER_DIRECTION);
+        if (findDTO.getOrderBy() != null) {
+            for (int i = 0; i < findDTO.getOrderBy().length; i++) {
+                sort = sort.and(findDTO.getOrderBy()[i], FindDTO.ORDER_DESC.equalsIgnoreCase(findDTO.getOrderDirection()[i]) ? Sort.Direction.Descending : Sort.Direction.Ascending);
+            }
+        }
+        return sort;
+    }
+
+    public static Bson getBsonSort(FindDTO findDTO) {
+        Bson sort = Sorts.ascending("_id");
+        if (findDTO.getOrderBy() != null && findDTO.getOrderDirection() == null)
+            throw new CustomException(Response.Status.BAD_REQUEST, FindDTO.EM_MISSING_ORDER_DIRECTION);
+        if (findDTO.getOrderBy() != null && findDTO.getOrderBy().length != findDTO.getOrderDirection().length)
+            throw new CustomException(Response.Status.BAD_REQUEST, FindDTO.EM_INSUFFICIENT_ORDER_DIRECTION);
+        if (findDTO.getOrderBy() != null && findDTO.getOrderBy().length > 0) {
+            List<Bson> sorts = new ArrayList<>();
+            for (int i = 0; i < findDTO.getOrderBy().length; i++) {
+                sorts.add(FindDTO.ORDER_DESC.equalsIgnoreCase(findDTO.getOrderDirection()[i]) ? Sorts.descending(findDTO.getOrderBy()[i]) : Sorts.ascending(findDTO.getOrderBy()[i]));
+            }
+            sort = Sorts.orderBy(sorts);
+        }
+        return sort;
     }
 }

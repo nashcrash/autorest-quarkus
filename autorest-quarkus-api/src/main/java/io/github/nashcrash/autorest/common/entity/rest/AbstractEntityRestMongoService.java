@@ -42,7 +42,7 @@ public class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO e
     }
 
     public List<DTO> search(FindDTO findDTO) {
-        Sort sort = findDTO.getSort();
+        Sort sort = PipelineUtils.getSort(findDTO);
         PanacheQuery<ENTITY> entityPanacheQuery;
         if (StringUtils.isNotBlank(findDTO.getQuery())) {
             entityPanacheQuery = repository.find(findDTO.getQuery(), sort);

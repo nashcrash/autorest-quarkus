@@ -43,7 +43,7 @@ public class AbstractEntityReactiveMongoService<ENTITY extends AbstractEntity, D
     }
 
     public Uni<List<DTO>> search(FindDTO findDTO) {
-        Sort sort = findDTO.getSort();
+        Sort sort = PipelineUtils.getSort(findDTO);
         ReactivePanacheQuery<ENTITY> eventoReactivePanacheQuery;
         if (StringUtils.isNotBlank(findDTO.getQuery())) {
             eventoReactivePanacheQuery = repository.find(findDTO.getQuery(), sort);

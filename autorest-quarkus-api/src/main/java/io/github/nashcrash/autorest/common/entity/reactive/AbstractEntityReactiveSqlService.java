@@ -2,6 +2,7 @@ package io.github.nashcrash.autorest.common.entity.reactive;
 
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
+import io.github.nashcrash.autorest.common.util.PipelineUtils;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
@@ -38,7 +39,7 @@ public class AbstractEntityReactiveSqlService<ENTITY extends AbstractEntity, DTO
     }
 
     public Uni<List<DTO>> search(FindDTO findDTO) {
-        Sort sort = findDTO.getSort();
+        Sort sort = PipelineUtils.getSort(findDTO);
         PanacheQuery<ENTITY> eventoReactivePanacheQuery;
         if (StringUtils.isNotBlank(findDTO.getQuery())) {
             eventoReactivePanacheQuery = repository.find(findDTO.getQuery(), sort);
