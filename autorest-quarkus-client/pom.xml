@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.nashcrash.autorest</groupId>
+        <artifactId>autorest-quarkus-parent</artifactId>
+        <version>1.0.2-SNAPSHOT</version>
+    </parent>
+    <artifactId>autorest-quarkus-client</artifactId>
+
+    <name>Autorest Quarkus Client</name>
+    <description>Automatically generates a full CRUD REST API for the annotated entity.</description>
+    <url>https://github.com/nashcrash/autorest-quarkus</url>
+    <developers>
+        <developer>
+            <name>Salvatore De Bonis</name>
+            <email>salvatore.debonis@sitissimo.it</email>
+        </developer>
+    </developers>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:git://github.com/nashcrash/autorest-quarkus.git</connection>
+        <developerConnection>scm:git:ssh://github.com:nashcrash/autorest-quarkus.git</developerConnection>
+        <url>https://github.com/nashcrash/autorest-quarkus/tree/main</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <properties>
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <lombok.version>1.18.38</lombok.version>
+        <lombok-mapstruct.version>0.2.0</lombok-mapstruct.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.nashcrash.autorest</groupId>
+            <artifactId>autorest-quarkus-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-client</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
