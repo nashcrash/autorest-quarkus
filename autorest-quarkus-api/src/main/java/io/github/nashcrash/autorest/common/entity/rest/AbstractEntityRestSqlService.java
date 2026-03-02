@@ -1,18 +1,18 @@
 package io.github.nashcrash.autorest.common.entity.rest;
 
-import io.github.nashcrash.autorest.common.entity.AbstractDTO;
-import io.github.nashcrash.autorest.common.entity.AbstractEntity;
-import io.github.nashcrash.autorest.common.entity.AbstractEntityMapper;
-import io.github.nashcrash.autorest.common.entity.FindDTO;
+import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.conversions.Bson;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class AbstractEntityRestSqlService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityRestService<ENTITY, DTO> {
@@ -71,5 +71,9 @@ public class AbstractEntityRestSqlService<ENTITY extends AbstractEntity, DTO ext
 
     public void deleteById(String id) {
         repository.deleteById(Long.parseLong(id));
+    }
+
+    public <T> List<T> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, FindDTO findDTO, Class<T> clazz) {
+        throw new NotImplementedException();
     }
 }

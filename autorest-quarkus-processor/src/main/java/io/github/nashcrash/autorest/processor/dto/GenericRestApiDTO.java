@@ -4,9 +4,9 @@ import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.TypeName;
 import io.github.nashcrash.autorest.api.DatabaseType;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)
+@SuperBuilder(toBuilder = true)
 public class GenericRestApiDTO {
     private String packageName;
     private String basePath;
@@ -28,4 +28,5 @@ public class GenericRestApiDTO {
     private TypeName entityType;
     private TypeName dtoType;
     private AnnotationSpec generatedAnnotationSpec;
+    private List<AggregateDTO> aggregate;
 }

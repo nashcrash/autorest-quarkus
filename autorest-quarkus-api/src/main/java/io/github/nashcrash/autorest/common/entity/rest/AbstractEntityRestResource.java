@@ -16,7 +16,7 @@ import java.util.List;
 @Slf4j
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO extends AbstractDTO> {
+public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements RestResource<DTO> {
     @Inject
     protected AbstractEntityRestService<ENTITY, DTO> service;
 

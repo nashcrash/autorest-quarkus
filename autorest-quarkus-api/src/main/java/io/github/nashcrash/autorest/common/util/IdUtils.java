@@ -18,14 +18,14 @@ public class IdUtils {
     public static String generateId(Object... keys) {
         List<String> stringKeys = new ArrayList<>();
         for (Object element : keys) {
-            if (element instanceof Instant) {
-                element = DateTimeFormatter.ISO_DATE_TIME.format((Instant) element);
-            } else if (element instanceof ZonedDateTime) {
-                element = ((ZonedDateTime) element).format(DateTimeFormatter.ISO_DATE_TIME);
-            } else if (element instanceof LocalDateTime) {
-                element = ((LocalDateTime) element).format(DateTimeFormatter.ISO_DATE_TIME);
-            } else if (element instanceof LocalDate) {
-                element = ((LocalDate) element).format(DateTimeFormatter.ISO_DATE);
+            if (element instanceof Instant instant) {
+                element = instant.getEpochSecond() + "_" + instant.getNano();
+            } else if (element instanceof ZonedDateTime zonedDateTime) {
+                element = zonedDateTime.format(DateTimeFormatter.ISO_DATE_TIME);
+            } else if (element instanceof LocalDateTime localDateTime) {
+                element = localDateTime.format(DateTimeFormatter.ISO_DATE_TIME);
+            } else if (element instanceof LocalDate localDate) {
+                element = localDate.format(DateTimeFormatter.ISO_DATE);
             }
             stringKeys.add(String.valueOf(element));
         }

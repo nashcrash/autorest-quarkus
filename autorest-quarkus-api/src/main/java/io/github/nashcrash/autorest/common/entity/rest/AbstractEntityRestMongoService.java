@@ -1,13 +1,14 @@
 package io.github.nashcrash.autorest.common.entity.rest;
 
 import io.github.nashcrash.autorest.common.entity.*;
-import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
 import io.quarkus.mongodb.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
@@ -21,6 +22,8 @@ public class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO e
     public static final String EM_ENTITY_NOT_FOUND_WITH_ID = "Entity not found with id: ";
 
     @Inject
+    @Getter
+    @Setter
     protected AbstractEntityRestMongoRepository<ENTITY> repository;
 
     @Inject

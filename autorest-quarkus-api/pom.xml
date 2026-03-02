@@ -5,13 +5,13 @@
     <parent>
         <groupId>io.github.nashcrash.autorest</groupId>
         <artifactId>autorest-quarkus-parent</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
     <artifactId>autorest-quarkus-api</artifactId>
 
     <name>Autorest Quarkus API</name>
     <description>Automatically generates a full CRUD REST API for the annotated entity.</description>
-    <url>https://sitissimo.it/</url>
+    <url>https://github.com/nashcrash/autorest-quarkus</url>
     <developers>
         <developer>
             <name>Salvatore De Bonis</name>

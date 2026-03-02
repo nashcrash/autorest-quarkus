@@ -1,11 +1,10 @@
 package io.github.nashcrash.autorest.common.entity.reactive;
 
-import io.github.nashcrash.autorest.common.entity.AbstractDTO;
-import io.github.nashcrash.autorest.common.entity.AbstractEntity;
-import io.github.nashcrash.autorest.common.entity.FindDTO;
+import io.github.nashcrash.autorest.common.entity.*;
 import io.smallrye.mutiny.Uni;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AbstractEntityReactiveService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> {
     Uni<DTO> findById(String id);
@@ -19,4 +18,6 @@ public interface AbstractEntityReactiveService<ENTITY extends AbstractEntity, DT
     Uni<DTO> patch(DTO dto);
 
     Uni<Void> deleteById(String id);
+
+    <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, FindDTO findDTO, Class<T> clazz);
 }

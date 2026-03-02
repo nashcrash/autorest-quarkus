@@ -1,7 +1,6 @@
 package io.github.nashcrash.autorest.common.entity.reactive;
 
 import io.github.nashcrash.autorest.common.entity.*;
-import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
@@ -9,6 +8,8 @@ import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
@@ -23,6 +24,8 @@ public class AbstractEntityReactiveMongoService<ENTITY extends AbstractEntity, D
     public static final String EM_INSUFFICIENT_ORDER_DIRECTION = "Insufficient orderDirection";
 
     @Inject
+    @Getter
+    @Setter
     protected AbstractEntityReactiveMongoRepository<ENTITY> repository;
 
     @Inject

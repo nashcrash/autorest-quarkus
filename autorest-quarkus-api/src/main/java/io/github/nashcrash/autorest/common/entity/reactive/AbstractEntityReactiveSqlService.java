@@ -1,9 +1,6 @@
 package io.github.nashcrash.autorest.common.entity.reactive;
 
-import io.github.nashcrash.autorest.common.entity.AbstractDTO;
-import io.github.nashcrash.autorest.common.entity.AbstractEntity;
-import io.github.nashcrash.autorest.common.entity.AbstractEntityMapper;
-import io.github.nashcrash.autorest.common.entity.FindDTO;
+import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
@@ -11,9 +8,11 @@ import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class AbstractEntityReactiveSqlService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityReactiveService<ENTITY, DTO> {
@@ -66,5 +65,9 @@ public class AbstractEntityReactiveSqlService<ENTITY extends AbstractEntity, DTO
 
     public Uni<Void> deleteById(String id) {
         return repository.deleteById(Long.parseLong(id)).replaceWithVoid();
+    }
+
+    public <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, FindDTO findDTO, Class<T> clazz) {
+        throw new NotImplementedException();
     }
 }

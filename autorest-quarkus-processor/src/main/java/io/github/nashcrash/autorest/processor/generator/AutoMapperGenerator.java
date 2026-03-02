@@ -41,6 +41,7 @@ public class AutoMapperGenerator {
         TypeName entityType = genericRestApiDTO.getEntityType();
         ClassName superClassName = ClassName.get("io.github.nashcrash.autorest.common.entity", "AbstractEntityMapper");
         ClassName idUtils = ClassName.get("io.github.nashcrash.autorest.common.util", "IdUtils");
+        ClassName mappingTarget = ClassName.get("org.mapstruct", "MappingTarget");
 
         List<String> params = genericRestApiDTO.getIdFields().stream()
                 .map(e -> "entity." + toGetterName(e, entityElement))
@@ -51,7 +52,9 @@ public class AutoMapperGenerator {
                 .addAnnotation(ClassName.get("org.mapstruct", "AfterMapping"))
                 .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
                 .returns(TypeName.VOID)
-                .addParameter(entityType, "entity")
+                .addParameter(ParameterSpec.builder(entityType, "entity")
+                        .addAnnotation(mappingTarget)
+                        .build())
                 .addStatement("$T.super.addExtraEntityData(entity)", superClassName)
                 .addComment("Set a logical ID")
                 .addStatement("entity.setId($T.generateId($N))", idUtils, StringUtils.join(params, ", "));

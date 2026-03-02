@@ -4,12 +4,11 @@ import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeName;
-import io.github.nashcrash.autorest.api.Consumer;
-import io.github.nashcrash.autorest.api.DatabaseType;
-import io.github.nashcrash.autorest.api.ResourceAPI;
-import io.github.nashcrash.autorest.api.Reactive;
+import io.github.nashcrash.autorest.api.*;
 import io.github.nashcrash.autorest.common.entity.AbstractEntityMongo;
 import io.github.nashcrash.autorest.common.entity.AbstractEntitySQL;
+import io.github.nashcrash.autorest.common.entity.FieldPair;
+import io.github.nashcrash.autorest.processor.dto.AggregateDTO;
 import io.github.nashcrash.autorest.processor.dto.GenericRestApiDTO;
 import io.github.nashcrash.autorest.processor.generator.AutoMapperGenerator;
 import io.github.nashcrash.autorest.processor.generator.AutoRepositoryGenerator;
@@ -19,6 +18,7 @@ import jakarta.annotation.Generated;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -28,6 +28,8 @@ import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -100,6 +102,49 @@ public class AutoRestProcessor extends AbstractProcessor {
         TypeName dtoType = getTypeName(dtoElement);
         String entityName = entityElement.getSimpleName().toString();
 
+        checkLombokBuilder(entityElement);
+        checkLombokBuilder(dtoElement);
+
+        //Check Aggregate
+        List<AggregateDTO> aggregateDTOS = new ArrayList<>();
+        // Aggregate[] aggregations = null;
+        // Aggregates aggregates = entityElement.getAnnotation(Aggregates.class);
+        // if (aggregates!=null) {
+        //     aggregations=aggregates.value();
+        // } else {
+        //     Aggregate aggregate1 = entityElement.getAnnotation(Aggregate.class);
+        //     aggregations = new Aggregate[1];
+        //     aggregations[0] = aggregate1;
+        // }
+        Aggregate[] aggregations = entityElement.getAnnotationsByType(Aggregate.class);
+        if (aggregations != null) {
+            for (Aggregate aggregate : aggregations) {
+                TypeElement dtoTypeElement = getDTOTypeElement(aggregate);
+                AggregateDTO aggregateDTO = new AggregateDTO();
+                aggregateDTO.setName(aggregate.name());
+                aggregateDTO.setPath(aggregate.path());
+                aggregateDTO.setDtoTypeElement(dtoTypeElement);
+                aggregateDTO.setDtoTypeName(getTypeName(dtoTypeElement));
+                for (Aggregate.AggregateFieldPair aggregateFieldPair : aggregate.groupBy()) {
+                    if (aggregateDTO.getGroupBy() == null) aggregateDTO.setGroupBy(new ArrayList<>());
+                    aggregateDTO.getGroupBy().add(FieldPair.builder()
+                            .originalField(aggregateFieldPair.originalField())
+                            .targetField(aggregateFieldPair.targetField())
+                            .build());
+                }
+                for (Aggregate.AggregateMapEntry aggregateMapEntry : aggregate.aggregateBy()) {
+                    if (aggregateDTO.getAggregateBy() == null) aggregateDTO.setAggregateBy(new HashMap<>());
+                    aggregateDTO.getAggregateBy().put(
+                            aggregateMapEntry.accumulator(),
+                            FieldPair.builder()
+                                    .originalField(aggregateMapEntry.value().originalField())
+                                    .targetField(aggregateMapEntry.value().targetField())
+                                    .build());
+                }
+                aggregateDTOS.add(aggregateDTO);
+            }
+        }
+
         GenericRestApiDTO genericRestApiDTO = GenericRestApiDTO.builder()
                 .basePath(annotation.basePath())
                 .packageName(packageName)
@@ -113,6 +158,7 @@ public class AutoRestProcessor extends AbstractProcessor {
                 .hasConsumer(hasConsumer)
                 .idFields(getIdFieldsSafe(entityElement))
                 .generatedAnnotationSpec(getGeneratedAnnotation())
+                .aggregate(aggregateDTOS)
                 .build();
 
         // 1. Genera il Repository
@@ -181,6 +227,15 @@ public class AutoRestProcessor extends AbstractProcessor {
         }
     }
 
+    private TypeElement getDTOTypeElement(Aggregate annotation) {
+        try {
+            return processingEnv.getElementUtils().getTypeElement(annotation.dto().getCanonicalName());
+        } catch (MirroredTypeException mte) {
+            DeclaredType classTypeMirror = (DeclaredType) mte.getTypeMirror();
+            return (TypeElement) classTypeMirror.asElement();
+        }
+    }
+
     //Non funziona
     private List<String> getIdFieldsSafe(TypeElement element) {
         return element.getAnnotationMirrors().stream()
@@ -190,5 +245,37 @@ public class AutoRestProcessor extends AbstractProcessor {
                 .map(e -> (List<?>) e.getValue().getValue())
                 .flatMap(List::stream)
                 .map(av -> av.toString().replaceAll("^\"|\"$", "")).toList();
+    }
+
+    private void checkLombokBuilder(TypeElement element) {
+        if (element == null) return;
+
+        boolean hasBuilder = false;
+        boolean hasSuperBuilder = false;
+
+        for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+            String annotationName = mirror.getAnnotationType().toString();
+            if (annotationName.equals("lombok.Builder")) {
+                hasBuilder = true;
+            } else if (annotationName.equals("lombok.experimental.SuperBuilder")) {
+                hasSuperBuilder = true;
+            }
+        }
+
+        TypeMirror superclass = element.getSuperclass();
+        boolean hasRelevantSuperClass = superclass.getKind() == javax.lang.model.type.TypeKind.DECLARED
+                && !superclass.toString().equals("java.lang.Object");
+
+        if (hasRelevantSuperClass && hasBuilder && !hasSuperBuilder) {
+            processingEnv.getMessager().printMessage(
+                    javax.tools.Diagnostic.Kind.ERROR,
+                    String.format(
+                            "Error in [%s]: Class extends '%s' but uses @Builder. For MapStruct to work correctly with inheritance, you must use @SuperBuilder, as in the father class.",
+                            element.getSimpleName(),
+                            superclass
+                    ),
+                    element
+            );
+        }
     }
 }

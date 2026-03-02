@@ -1,7 +1,6 @@
 package io.github.nashcrash.autorest.common.entity.messaging;
 
 import io.github.nashcrash.autorest.common.entity.AbstractDTO;
-import io.github.nashcrash.autorest.common.entity.AbstractEntity;
 import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.kafka.DeserializationFailureHandler;

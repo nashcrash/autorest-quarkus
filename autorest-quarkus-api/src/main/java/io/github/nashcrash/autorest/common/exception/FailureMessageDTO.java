@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
+import lombok.extern.jackson.Jacksonized;
 
 import java.time.Instant;
 import java.util.Map;
@@ -13,7 +15,8 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldNameConstants
-@Builder(toBuilder = true)
+@SuperBuilder(toBuilder = true)
+@Jacksonized
 public class FailureMessageDTO {
     private Instant timestamp;
     private Integer status;

@@ -18,13 +18,13 @@ import java.util.Map;
 
 public class PipelineUtils {
 
-    //TODO add Sort, groupBy, limit, page
     public static List<Bson> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, FindDTO findDTO) {
         if (groupBy == null || groupBy.isEmpty()) {
             throw new IllegalArgumentException("Missing group fields");
         }
 
         List<Bson> pipeline = new ArrayList<>();
+
         if (StringUtils.isNotEmpty(findDTO.getQuery())) {
             BsonDocument document = BsonDocument.parse(findDTO.getQuery());
             pipeline.add(Aggregates.match(document)); //Add filter
@@ -50,6 +50,10 @@ public class PipelineUtils {
         }
 
         pipeline.add(Aggregates.project(Projections.fields(projections))); //Add projection
+
+        pipeline.add(Aggregates.sort(findDTO.getBsonSort()));
+        pipeline.add(Aggregates.skip(findDTO.getPage() * findDTO.getLimit()));
+        pipeline.add(Aggregates.limit(findDTO.getLimit()));
 
         return pipeline;
     }
