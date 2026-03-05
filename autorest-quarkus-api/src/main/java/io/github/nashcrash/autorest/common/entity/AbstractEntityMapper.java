@@ -8,7 +8,12 @@ import org.mapstruct.*;
 import java.time.Instant;
 import java.util.List;
 
+@Mapper
 public interface AbstractEntityMapper<ENTITY extends AbstractEntity, DTO extends AbstractDTO> {
+    @Mapping(target = "id", ignore = true)
+    ENTITY cloneToNewInstance(ENTITY entity);
+
+    @Mapping(target = "id", source = "id")
     DTO toDto(ENTITY entity);
 
     ENTITY toEntity(DTO dto);
@@ -37,5 +42,10 @@ public interface AbstractEntityMapper<ENTITY extends AbstractEntity, DTO extends
         }
         entity.setLastModifiedUser(username);
         entity.setLastModifiedDate(now);
+        if (entity instanceof AbstractEntityHistorical historical) {
+            if (historical.getStartValidityDate()==null) {
+                historical.setStartValidityDate(now);
+            }
+        }
     }
 }

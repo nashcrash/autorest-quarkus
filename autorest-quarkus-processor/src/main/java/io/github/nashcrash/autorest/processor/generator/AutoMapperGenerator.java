@@ -1,16 +1,24 @@
 package io.github.nashcrash.autorest.processor.generator;
 
 import com.squareup.javapoet.*;
+import io.github.nashcrash.autorest.processor.AutoRestProcessor;
 import io.github.nashcrash.autorest.processor.dto.GenericRestApiDTO;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 import java.util.List;
 
+@AllArgsConstructor
 public class AutoMapperGenerator {
+    protected ProcessingEnvironment processingEnv;
 
     public JavaFile generateMapper(GenericRestApiDTO genericRestApiDTO) {
         TypeName entityType = genericRestApiDTO.getEntityType();
@@ -32,7 +40,7 @@ public class AutoMapperGenerator {
         }
 
         return JavaFile.builder(genericRestApiDTO.getPackageName(), mapperInterface.build())
-                .addFileComment("AUTO-GENERATED MAPSTRUCT MAPPER")
+                .addFileComment(AutoRestProcessor.AUTO_GENERATED)
                 .build();
     }
 
@@ -88,12 +96,31 @@ public class AutoMapperGenerator {
     }
 
     private TypeMirror getFieldType(TypeElement classElement, String fieldName) {
-        return javax.lang.model.util.ElementFilter.fieldsIn(classElement.getEnclosedElements())
+        java.util.Optional<TypeMirror> fieldType = javax.lang.model.util.ElementFilter.fieldsIn(classElement.getEnclosedElements())
                 .stream()
                 .filter(field -> field.getSimpleName().toString().equals(fieldName))
                 .map(javax.lang.model.element.Element::asType)
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Field " + fieldName + " not found in " + classElement.getSimpleName()));
+                .findFirst();
+
+        if (fieldType.isPresent()) {
+            return fieldType.get();
+        }
+        //Search in superclass
+        javax.lang.model.type.TypeMirror superclassMirror = classElement.getSuperclass();
+
+        // Check that the superclass exists and is not Object (which has Kind NONE or is java.lang.Object)
+        if (superclassMirror.getKind() == javax.lang.model.type.TypeKind.DECLARED) {
+            javax.lang.model.element.TypeElement superclassElement = (javax.lang.model.element.TypeElement) processingEnv.getTypeUtils().asElement(superclassMirror);
+            if (!superclassElement.getQualifiedName().toString().equals("java.lang.Object")) {
+                return getFieldType(superclassElement, fieldName);
+            }
+        }
+        //else
+        String errorMessage="Field " + fieldName + " not found in " + classElement.getSimpleName() + " or its superclasses";
+        processingEnv.getMessager().printMessage(
+                Diagnostic.Kind.ERROR,
+                "Failed to generate code for " + classElement.getSimpleName() + "Mapper: " + errorMessage
+        );
+        throw new IllegalArgumentException(errorMessage);
     }
 }

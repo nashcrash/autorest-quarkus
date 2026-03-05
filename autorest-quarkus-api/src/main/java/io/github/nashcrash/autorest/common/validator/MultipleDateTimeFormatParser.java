@@ -11,6 +11,7 @@ import java.util.Date;
 
 public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
     public static final String ISO_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
+    public static final String DEFAULT_MESSAGE = "Invalid date format: {0}";
     private String[] patterns;
     private String message;
 
@@ -19,7 +20,10 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
         this.message = message;
     }
 
-    private Date parseDate(String referenceDate, String[] patterns) {
+    public static Date parseDate(String referenceDate, String[] patterns, String message) {
+        if (referenceDate==null) return null;
+        patterns = (patterns == null || patterns.length < 1) ? new String[] {ISO_PATTERN} : patterns;
+        message = (message == null || message.isBlank()) ? DEFAULT_MESSAGE : message;
         Date refDate = null;
         for (String pattern : patterns) {
             try {
@@ -36,7 +40,7 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
 
     @Override
     public Date fromString(String s) {
-        return parseDate(s, patterns);
+        return parseDate(s, patterns, message);
     }
 
     @Override

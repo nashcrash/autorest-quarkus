@@ -1,4 +1,4 @@
-package io.github.nashcrash.autorest.client;
+package io.github.nashcrash.autorest.common.client;
 
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -9,7 +9,7 @@ import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 import java.io.ByteArrayInputStream;
 
 @Provider
-public class RestClientExceptionMapper implements ResponseExceptionMapper<RuntimeException> {
+public class CustomClientExceptionMapper implements ResponseExceptionMapper<RuntimeException> {
 
     @Override
     public RuntimeException toThrowable(Response response) {

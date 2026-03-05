@@ -1,4 +1,4 @@
-package io.github.nashcrash.autorest.client;
+package io.github.nashcrash.autorest.common.client;
 
 import io.github.nashcrash.autorest.common.context.ContextManager;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -8,7 +8,7 @@ import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 import java.util.Map;
 
 @ApplicationScoped
-public class RestClientHeaderFactory implements ClientHeadersFactory {
+public class CustomClientHeaderFactory implements ClientHeadersFactory {
 
     @Override
     public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders, MultivaluedMap<String, String> clientOutgoingHeaders) {

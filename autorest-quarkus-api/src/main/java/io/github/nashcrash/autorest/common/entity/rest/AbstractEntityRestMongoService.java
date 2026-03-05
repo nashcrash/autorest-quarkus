@@ -3,9 +3,12 @@ package io.github.nashcrash.autorest.common.entity.rest;
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
+import io.quarkus.mongodb.panache.Panache;
 import io.quarkus.mongodb.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,12 +63,26 @@ public class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO e
         return mapper.toDto(entity);
     }
 
+    @Transactional
     public DTO patch(DTO dto) {
         ENTITY entity = repository.findById(dto.getId());
         if (entity == null)
             throw new CustomException(Response.Status.NOT_FOUND, EM_ENTITY_NOT_FOUND_WITH_ID + dto.getId());
         mapper.patchToEntity(dto, entity);
-        repository.persist(entity);
+        if (entity instanceof AbstractEntityHistoricalMongo historicalEntity) {
+            historicalEntity.setEndValidityDate(Instant.now());
+
+            AbstractEntityHistoricalMongo newEntity = (AbstractEntityHistoricalMongo) mapper.cloneToNewInstance(entity);
+            newEntity.setId(null);
+            newEntity.setStartValidityDate(historicalEntity.getEndValidityDate());
+            newEntity.setEndValidityDate(null);
+
+            repository.persist((ENTITY) historicalEntity);
+            repository.persist((ENTITY) newEntity);
+            entity = (ENTITY) newEntity;
+        } else {
+            repository.persist(entity);
+        }
         return mapper.toDto(entity);
     }
 

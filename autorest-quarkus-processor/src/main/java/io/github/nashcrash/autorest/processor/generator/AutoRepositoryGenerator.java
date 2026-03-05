@@ -2,6 +2,7 @@ package io.github.nashcrash.autorest.processor.generator;
 
 import com.squareup.javapoet.*;
 import io.github.nashcrash.autorest.api.DatabaseType;
+import io.github.nashcrash.autorest.processor.AutoRestProcessor;
 import io.github.nashcrash.autorest.processor.dto.GenericRestApiDTO;
 
 import javax.lang.model.element.Modifier;
@@ -36,7 +37,7 @@ public class AutoRepositoryGenerator {
                 .build();
 
         return JavaFile.builder(genericRestApiDTO.getPackageName(), repositoryClass)
-                .addFileComment("AUTO-GENERATED REPOSITORY")
+                .addFileComment(AutoRestProcessor.AUTO_GENERATED)
                 .build();
     }
 }

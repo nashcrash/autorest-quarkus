@@ -2,6 +2,7 @@ package io.github.nashcrash.autorest.processor.generator;
 
 import com.squareup.javapoet.*;
 import io.github.nashcrash.autorest.api.DatabaseType;
+import io.github.nashcrash.autorest.processor.AutoRestProcessor;
 import io.github.nashcrash.autorest.processor.dto.GenericRestApiDTO;
 
 import javax.lang.model.element.Modifier;
@@ -45,7 +46,7 @@ public class AutoServiceGenerator {
         serviceClass.superclass(superClass);
 
         return JavaFile.builder(packageName, serviceClass.build())
-                .addFileComment("AUTO-GENERATED SERVICE - DO NOT EDIT")
+                .addFileComment(AutoRestProcessor.AUTO_GENERATED)
                 .build();
     }
 }

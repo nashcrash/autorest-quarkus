@@ -25,9 +25,6 @@ public class MultipleDateTimeFormatProvider implements ParamConverterProvider {
             if (annotation instanceof MultipleDateTimeFormat multipleDateTimeFormat && rawType.equals(String.class)) {
                 String[] patterns = multipleDateTimeFormat.patterns();
                 String message = multipleDateTimeFormat.message();
-                if (patterns == null || patterns.length < 1) {
-                    patterns = default_patterns;
-                }
                 return (ParamConverter<T>) new MultipleDateTimeFormatParser(patterns, message);
             }
         }

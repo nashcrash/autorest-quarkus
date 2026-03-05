@@ -6,7 +6,7 @@
 
     <groupId>io.github.nashcrash.autorest</groupId>
     <artifactId>autorest-quarkus-parent</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>pom</packaging>
 
     <name>Autorest Quarkus Parent</name>
@@ -35,7 +35,6 @@
 
     <modules>
         <module>autorest-quarkus-api</module>
-        <module>autorest-quarkus-client</module>
         <module>autorest-quarkus-test</module>
         <module>autorest-quarkus-processor</module>
     </modules>

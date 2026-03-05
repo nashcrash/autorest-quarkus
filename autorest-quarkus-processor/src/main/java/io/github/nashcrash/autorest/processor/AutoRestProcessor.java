@@ -10,10 +10,7 @@ import io.github.nashcrash.autorest.common.entity.AbstractEntitySQL;
 import io.github.nashcrash.autorest.common.entity.FieldPair;
 import io.github.nashcrash.autorest.processor.dto.AggregateDTO;
 import io.github.nashcrash.autorest.processor.dto.GenericRestApiDTO;
-import io.github.nashcrash.autorest.processor.generator.AutoMapperGenerator;
-import io.github.nashcrash.autorest.processor.generator.AutoRepositoryGenerator;
-import io.github.nashcrash.autorest.processor.generator.AutoResourceGenerator;
-import io.github.nashcrash.autorest.processor.generator.AutoServiceGenerator;
+import io.github.nashcrash.autorest.processor.generator.*;
 import jakarta.annotation.Generated;
 
 import javax.annotation.processing.*;
@@ -40,11 +37,13 @@ import java.util.Set;
 @SupportedAnnotationTypes("io.github.nashcrash.autorest.api.ResourceAPI")
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 public class AutoRestProcessor extends AbstractProcessor {
+    public static final String AUTO_GENERATED = "AUTO-GENERATED CODE BY AUTOREST-QUARKUS - DO NOT EDIT";
 
     private AutoResourceGenerator restGenerator;
     private AutoServiceGenerator serviceGenerator;
     private AutoRepositoryGenerator repositoryGenerator;
     private AutoMapperGenerator mapperGenerator;
+    private AutoClientGenerator clientGenerator;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -53,7 +52,8 @@ public class AutoRestProcessor extends AbstractProcessor {
         this.restGenerator = new AutoResourceGenerator();
         this.serviceGenerator = new AutoServiceGenerator();
         this.repositoryGenerator = new AutoRepositoryGenerator();
-        this.mapperGenerator = new AutoMapperGenerator();
+        this.mapperGenerator = new AutoMapperGenerator(this.processingEnv);
+        this.clientGenerator = new AutoClientGenerator(processingEnv);
     }
 
     @Override
@@ -95,6 +95,7 @@ public class AutoRestProcessor extends AbstractProcessor {
         ResourceAPI annotation = entityElement.getAnnotation(ResourceAPI.class);
         boolean isReactive = entityElement.getAnnotation(Reactive.class) != null;
         boolean hasConsumer = entityElement.getAnnotation(Consumer.class) != null;
+        ResourceClient resourceClient = entityElement.getAnnotation(ResourceClient.class);
         String packageName = processingEnv.getElementUtils().getPackageOf(entityElement).toString();
         TypeElement dtoElement = getDTOTypeElement(annotation);
         DatabaseType databaseType = validateElement(entityElement);
@@ -107,15 +108,6 @@ public class AutoRestProcessor extends AbstractProcessor {
 
         //Check Aggregate
         List<AggregateDTO> aggregateDTOS = new ArrayList<>();
-        // Aggregate[] aggregations = null;
-        // Aggregates aggregates = entityElement.getAnnotation(Aggregates.class);
-        // if (aggregates!=null) {
-        //     aggregations=aggregates.value();
-        // } else {
-        //     Aggregate aggregate1 = entityElement.getAnnotation(Aggregate.class);
-        //     aggregations = new Aggregate[1];
-        //     aggregations[0] = aggregate1;
-        // }
         Aggregate[] aggregations = entityElement.getAnnotationsByType(Aggregate.class);
         if (aggregations != null) {
             for (Aggregate aggregate : aggregations) {
@@ -159,31 +151,40 @@ public class AutoRestProcessor extends AbstractProcessor {
                 .idFields(getIdFieldsSafe(entityElement))
                 .generatedAnnotationSpec(getGeneratedAnnotation())
                 .aggregate(aggregateDTOS)
+                .isResourceClient(resourceClient != null)
+                .configKey(resourceClient != null ? resourceClient.configKey() : null)
                 .build();
 
-        // 1. Genera il Repository
+        // 1. Generate Repository
         if (checkExists(genericRestApiDTO, "Repository")) {
             JavaFile repoFile = repositoryGenerator.generateRepository(genericRestApiDTO);
             repoFile.writeTo(processingEnv.getFiler());
         }
 
-        // 2. Genera il Mapper
+        // 2. Generate Mapper
         if (checkExists(genericRestApiDTO, "Mapper")) {
             JavaFile mapperFile = mapperGenerator.generateMapper(genericRestApiDTO);
             mapperFile.writeTo(processingEnv.getFiler());
         }
 
-        // 3. Genera il Service
+        // 3. Generate Service
         if (checkExists(genericRestApiDTO, "Service")) {
             JavaFile serviceFile = serviceGenerator.generateService(genericRestApiDTO);
             serviceFile.writeTo(processingEnv.getFiler());
         }
 
-        // 4. Genera la Resource
+        // 4. Generate Client interface
+        if (genericRestApiDTO.isResourceClient() && checkExists(genericRestApiDTO, "Client")) {
+            JavaFile resourceFile = clientGenerator.generateClient(genericRestApiDTO);
+            resourceFile.writeTo(processingEnv.getFiler());
+        }
+
+        // 5. Generate Resource
         if (checkExists(genericRestApiDTO, "Resource")) {
             JavaFile resourceFile = restGenerator.generateResource(genericRestApiDTO);
             resourceFile.writeTo(processingEnv.getFiler());
         }
+
     }
 
     private boolean checkExists(GenericRestApiDTO genericRestApiDTO, String suffix) {

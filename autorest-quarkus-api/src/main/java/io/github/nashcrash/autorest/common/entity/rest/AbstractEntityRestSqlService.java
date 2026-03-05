@@ -6,12 +6,13 @@ import io.github.nashcrash.autorest.common.util.PipelineUtils;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.conversions.Bson;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -61,12 +62,26 @@ public class AbstractEntityRestSqlService<ENTITY extends AbstractEntity, DTO ext
         return mapper.toDto(entity);
     }
 
+    @Transactional
     public DTO patch(DTO dto) {
         ENTITY entity = repository.findById(Long.parseLong(dto.getId()));
         if (entity == null)
             throw new CustomException(Response.Status.NOT_FOUND, EM_ENTITY_NOT_FOUND_WITH_ID + dto.getId());
         mapper.patchToEntity(dto, entity);
-        repository.persist(entity);
+        if (entity instanceof AbstractEntityHistoricalSQL historicalEntity) {
+            historicalEntity.setEndValidityDate(Instant.now());
+
+            AbstractEntityHistoricalMongo newEntity = (AbstractEntityHistoricalMongo) mapper.cloneToNewInstance(entity);
+            newEntity.setId(null);
+            newEntity.setStartValidityDate(historicalEntity.getEndValidityDate());
+            newEntity.setEndValidityDate(null);
+
+            repository.persist((ENTITY) historicalEntity);
+            repository.persist((ENTITY) newEntity);
+            entity = (ENTITY) newEntity;
+        } else {
+            repository.persist(entity);
+        }
         return mapper.toDto(entity);
     }
 
