@@ -7,10 +7,12 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.util.Date;
 
+@NoArgsConstructor
 @AllArgsConstructor
 public class MultipleDateTimeSerializer extends JsonSerializer<Date> implements ContextualSerializer {
     private String[] patterns;
@@ -19,8 +21,6 @@ public class MultipleDateTimeSerializer extends JsonSerializer<Date> implements 
     @Override
     public JsonSerializer<?> createContextual(SerializerProvider serializerProvider, BeanProperty property) throws JsonMappingException {
         MultipleDateTimeFormat ann = property.getAnnotation(MultipleDateTimeFormat.class);
-        String[] patterns = null;
-        String message = null;
         if (ann != null) {
             patterns = ann.patterns();
             message = ann.message();

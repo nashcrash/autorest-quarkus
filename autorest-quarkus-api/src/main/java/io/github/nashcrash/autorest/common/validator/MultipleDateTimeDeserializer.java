@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.util.Date;
 
+@NoArgsConstructor
 @AllArgsConstructor
 public class MultipleDateTimeDeserializer extends JsonDeserializer<Date> implements ContextualDeserializer {
     private String[] patterns;
@@ -17,8 +19,6 @@ public class MultipleDateTimeDeserializer extends JsonDeserializer<Date> impleme
     @Override
     public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty property) {
         MultipleDateTimeFormat ann = property.getAnnotation(MultipleDateTimeFormat.class);
-        String[] patterns = null;
-        String message = null;
         if (ann != null) {
             patterns = ann.patterns();
             message = ann.message();

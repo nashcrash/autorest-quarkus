@@ -52,7 +52,7 @@ public class QueryBuilder {
     private String type;
     private List<Condition> conditions;
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_DATE;
-    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
+    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
 
     public static QueryBuilder getMongoQueryBuilder() {
         return new QueryBuilder("mongo");

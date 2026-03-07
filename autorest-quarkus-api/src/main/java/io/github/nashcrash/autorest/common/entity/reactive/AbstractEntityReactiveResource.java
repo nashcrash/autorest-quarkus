@@ -4,6 +4,7 @@ import io.github.nashcrash.autorest.common.entity.AbstractDTO;
 import io.github.nashcrash.autorest.common.entity.AbstractEntity;
 import io.github.nashcrash.autorest.common.entity.FindDTO;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -76,6 +77,7 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
     }
 
     @PATCH
+    @Blocking
     @Operation(
             summary = "Update only an existing resource, ignoring null fields"
     )

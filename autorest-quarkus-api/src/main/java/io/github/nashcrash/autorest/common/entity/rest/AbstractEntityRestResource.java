@@ -3,6 +3,7 @@ package io.github.nashcrash.autorest.common.entity.rest;
 import io.github.nashcrash.autorest.common.entity.AbstractDTO;
 import io.github.nashcrash.autorest.common.entity.AbstractEntity;
 import io.github.nashcrash.autorest.common.entity.FindDTO;
+import io.smallrye.common.annotation.Blocking;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -75,6 +76,7 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
     }
 
     @PATCH
+    @Blocking
     @Operation(
             summary = "Update only an existing resource, ignoring null fields"
     )

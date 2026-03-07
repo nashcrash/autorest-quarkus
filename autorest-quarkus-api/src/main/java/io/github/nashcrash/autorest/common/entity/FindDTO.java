@@ -35,10 +35,10 @@ public class FindDTO {
     private Integer limit;
 
     public Integer getPage() {
-        return Math.max(0, page);
+        return (page==null || page < 0) ? 0 : page;
     }
 
     public Integer getLimit() {
-        return limit <= 0 ? DEFAULT_LIMIT : limit;
+        return (limit==null || limit <= 0) ? DEFAULT_LIMIT : limit;
     }
 }

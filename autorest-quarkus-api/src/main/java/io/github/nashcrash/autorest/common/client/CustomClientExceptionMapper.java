@@ -1,5 +1,6 @@
 package io.github.nashcrash.autorest.common.client;
 
+import io.quarkus.runtime.Quarkus;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
@@ -23,14 +24,14 @@ public class CustomClientExceptionMapper implements ResponseExceptionMapper<Runt
     }
 
     private String getBody(Response response) {
-        String body = null;
-        if (response.getLength() > 0) {
-            ByteArrayInputStream is = (ByteArrayInputStream) response.getEntity();
-            byte[] bytes = new byte[is.available()];
-            is.read(bytes, 0, is.available());
-            body = new String(bytes);
+        try {
+            if (response.hasEntity()) {
+                return response.readEntity(String.class);
+            }
+        } catch (Exception e) {
+            return "Error while parsing remote response body: " + e.getMessage();
         }
-        return body;
+        return "No response body available";
     }
 
 }
