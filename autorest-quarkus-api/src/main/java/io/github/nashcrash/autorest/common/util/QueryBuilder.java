@@ -19,6 +19,8 @@ public class QueryBuilder {
         templateSQL.put("isodate", "'#value#'");
         templateSQL.put("escape", "'");
         templateSQL.put("and", " and ");
+        templateSQL.put("or", " or ");
+        templateSQL.put("or_structure", "( #value# )");
         templateSQL.put("eq", "#field# = #value#");
         templateSQL.put("ne", "#field# <> #value#");
         templateSQL.put("in", "#field# in (#value#)");
@@ -35,6 +37,8 @@ public class QueryBuilder {
         templateMongo.put("isodate", "ISODate(\"#value#\")");
         templateMongo.put("escape", "\"");
         templateMongo.put("and", ",");
+        templateMongo.put("or", ",");
+        templateMongo.put("or_structure", "\"$or\": [ #value# ]");
         templateMongo.put("eq", "#field#: #value#");
         templateMongo.put("ne", "#field#: {$ne: #value#}");
         templateMongo.put("in", "#field#: {$in: [#value#]}");
@@ -52,7 +56,7 @@ public class QueryBuilder {
     private String type;
     private List<Condition> conditions;
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_DATE;
-    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     public static QueryBuilder getMongoQueryBuilder() {
         return new QueryBuilder("mongo");
@@ -145,8 +149,21 @@ public class QueryBuilder {
         return this;
     }
 
+    public <T> QueryBuilder andHistoricalReference(String startField, String endField, T referenceValue) {
+        return this.andLte(startField, referenceValue)
+                .or(
+                        new QueryBuilder(this.type).andGt(endField, referenceValue),
+                        new QueryBuilder(this.type).andIsNull(endField)
+                );
+    }
+
     public <T> QueryBuilder andNotBetween(String field, T valueFrom, T valueTo) {
         conditions.add(new Condition(field, "notbetween", valueFrom, valueTo));
+        return this;
+    }
+
+    public QueryBuilder or(QueryBuilder... queryBuilders) {
+        conditions.add(new Condition(null, "or", queryBuilders));
         return this;
     }
 
@@ -166,12 +183,27 @@ public class QueryBuilder {
             } else {
                 stringBuilder.append(template.get("and"));
             }
-            stringBuilder.append(
-                    template.get(condition.type)
-                            .replaceAll("#field#", condition.field)
-                            .replaceAll("#value#", escape(condition.value, template))
-                            .replaceAll("#value2#", escape(condition.value2, template))
-            );
+            if ("or".equals(condition.type)) {
+                StringBuilder ors = new StringBuilder();
+                boolean firstOr = true;
+                QueryBuilder[] array=(QueryBuilder[]) condition.value;
+                for (QueryBuilder qb : array) {
+                    if (firstOr) {
+                        firstOr = false;
+                    } else {
+                        ors.append(template.get("or"));
+                    }
+                    ors.append(qb.build());
+                }
+                stringBuilder.append(template.get("or_structure").replace("#value#", ors.toString()));
+            } else {
+                stringBuilder.append(
+                        template.get(condition.type)
+                                .replace("#field#", condition.field)
+                                .replace("#value#", escape(condition.value, template))
+                                .replace("#value2#", escape(condition.value2, template))
+                );
+            }
         }
         return stringBuilder.toString();
     }
@@ -184,16 +216,16 @@ public class QueryBuilder {
             return value.toString();
         } else if (value instanceof ObjectId objectId) {
             String isodate = template.get("objectid");
-            return isodate.replaceAll("#value#", objectId.toHexString());
+            return isodate.replace("#value#", objectId.toHexString());
         } else if (value instanceof LocalDate localDate) {
             String isodate = template.get("isodate");
-            return isodate.replaceAll("#value#", localDate.format(this.dateFormatter));
+            return isodate.replace("#value#", localDate.format(this.dateFormatter));
         } else if (value instanceof Instant instant) {
             String isodate = template.get("isodate");
-            return isodate.replaceAll("#value#", this.dateTimeFormatter.withZone(ZoneId.systemDefault()).format(instant));
+            return isodate.replace("#value#", this.dateTimeFormatter.withZone(ZoneId.systemDefault()).format(instant));
         } else if (value instanceof Date date) {
             String isodate = template.get("isodate");
-            return isodate.replaceAll("#value#", this.dateTimeFormatter.withZone(ZoneId.systemDefault()).format(date.toInstant()));
+            return isodate.replace("#value#", this.dateTimeFormatter.withZone(ZoneId.systemDefault()).format(date.toInstant()));
         } else if (value instanceof Boolean) {
             return String.valueOf(value);
         } else if (value instanceof Collection<?> collection) {
