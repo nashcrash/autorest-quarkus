@@ -78,7 +78,9 @@ public class AbstractEntityReactiveMongoService<ENTITY extends AbstractEntity, D
                         if (historicalEntity.getEndValidityDate() != null) {
                             throw new CustomException(Response.Status.CONFLICT, EM_ENTITY_ALREADY_HISTORIZED_WITH_ID + dto.getId());
                         }
-                        historicalEntity.setEndValidityDate(Instant.now());
+                        if (historicalEntity.getEndValidityDate() == null) {
+                            historicalEntity.setEndValidityDate(Instant.now());
+                        }
 
                         AbstractEntityHistoricalMongo newEntity = (AbstractEntityHistoricalMongo) mapper.cloneToNewInstance(entity);
                         newEntity.setStartValidityDate(historicalEntity.getEndValidityDate());

@@ -8,11 +8,18 @@ import java.util.Map;
 
 public interface AbstractEntityReactiveService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> {
     Uni<DTO> findById(String id);
+
     Uni<List<DTO>> search(FindDTO findDTO);
+
     Uni<Long> count(FindDTO findDTO);
+
     Uni<DTO> create(DTO dto);
+
     Uni<DTO> upsert(DTO dto);
+
     Uni<DTO> patch(DTO dto);
+
     Uni<Void> deleteById(String id);
+
     <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, FindDTO findDTO, Class<T> clazz);
 }

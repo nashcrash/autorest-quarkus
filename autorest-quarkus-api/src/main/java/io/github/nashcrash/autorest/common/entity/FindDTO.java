@@ -1,20 +1,11 @@
 package io.github.nashcrash.autorest.common.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.mongodb.client.model.Sorts;
-import io.github.nashcrash.autorest.common.exception.CustomException;
-import io.quarkus.panache.common.Sort;
-import jakarta.ws.rs.core.Response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
-import org.bson.conversions.Bson;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -35,10 +26,10 @@ public class FindDTO {
     private Integer limit;
 
     public Integer getPage() {
-        return (page==null || page < 0) ? 0 : page;
+        return (page == null || page < 0) ? 0 : page;
     }
 
     public Integer getLimit() {
-        return (limit==null || limit <= 0) ? DEFAULT_LIMIT : limit;
+        return (limit == null || limit <= 0) ? DEFAULT_LIMIT : limit;
     }
 }

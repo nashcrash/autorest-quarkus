@@ -4,8 +4,6 @@ import io.github.nashcrash.autorest.common.entity.FindDTO;
 import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import java.util.List;
 

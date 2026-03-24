@@ -16,6 +16,7 @@ import java.util.Date;
 public class MultipleDateTimeDeserializer extends JsonDeserializer<Date> implements ContextualDeserializer {
     private String[] patterns;
     private String message;
+
     @Override
     public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty property) {
         MultipleDateTimeFormat ann = property.getAnnotation(MultipleDateTimeFormat.class);

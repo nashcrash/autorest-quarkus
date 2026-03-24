@@ -186,7 +186,7 @@ public class QueryBuilder {
             if ("or".equals(condition.type)) {
                 StringBuilder ors = new StringBuilder();
                 boolean firstOr = true;
-                QueryBuilder[] array=(QueryBuilder[]) condition.value;
+                QueryBuilder[] array = (QueryBuilder[]) condition.value;
                 for (QueryBuilder qb : array) {
                     if (firstOr) {
                         firstOr = false;

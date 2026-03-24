@@ -43,7 +43,7 @@ public interface AbstractEntityMapper<ENTITY extends AbstractEntity, DTO extends
         entity.setLastModifiedUser(username);
         entity.setLastModifiedDate(now);
         if (entity instanceof AbstractEntityHistorical historical) {
-            if (historical.getStartValidityDate()==null) {
+            if (historical.getStartValidityDate() == null) {
                 historical.setStartValidityDate(now);
             }
         }

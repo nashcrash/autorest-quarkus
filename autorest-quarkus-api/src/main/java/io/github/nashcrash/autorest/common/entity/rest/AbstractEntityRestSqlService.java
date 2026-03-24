@@ -77,7 +77,9 @@ public class AbstractEntityRestSqlService<ENTITY extends AbstractEntity, DTO ext
             throw new CustomException(Response.Status.NOT_FOUND, EM_ENTITY_NOT_FOUND_WITH_ID + dto.getId());
         mapper.patchToEntity(dto, entity);
         if (entity instanceof AbstractEntityHistoricalSQL historicalEntity) {
-            historicalEntity.setEndValidityDate(Instant.now());
+            if (historicalEntity.getEndValidityDate() == null) {
+                historicalEntity.setEndValidityDate(Instant.now());
+            }
 
             AbstractEntityHistoricalMongo newEntity = (AbstractEntityHistoricalMongo) mapper.cloneToNewInstance(entity);
             newEntity.setId(null);

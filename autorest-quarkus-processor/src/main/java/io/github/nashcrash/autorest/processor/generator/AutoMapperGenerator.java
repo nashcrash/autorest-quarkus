@@ -4,8 +4,6 @@ import com.squareup.javapoet.*;
 import io.github.nashcrash.autorest.processor.AutoRestProcessor;
 import io.github.nashcrash.autorest.processor.dto.GenericRestApiDTO;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -116,7 +114,7 @@ public class AutoMapperGenerator {
             }
         }
         //else
-        String errorMessage="Field " + fieldName + " not found in " + classElement.getSimpleName() + " or its superclasses";
+        String errorMessage = "Field " + fieldName + " not found in " + classElement.getSimpleName() + " or its superclasses";
         processingEnv.getMessager().printMessage(
                 Diagnostic.Kind.ERROR,
                 "Failed to generate code for " + classElement.getSimpleName() + "Mapper: " + errorMessage

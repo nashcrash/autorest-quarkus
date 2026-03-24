@@ -1,13 +1,10 @@
 package io.github.nashcrash.autorest.common.client;
 
-import io.quarkus.runtime.Quarkus;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
-
-import java.io.ByteArrayInputStream;
 
 @Provider
 public class CustomClientExceptionMapper implements ResponseExceptionMapper<RuntimeException> {

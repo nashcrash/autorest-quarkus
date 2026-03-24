@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *  Add ResourceClient for entity
+ * Add ResourceClient for entity
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

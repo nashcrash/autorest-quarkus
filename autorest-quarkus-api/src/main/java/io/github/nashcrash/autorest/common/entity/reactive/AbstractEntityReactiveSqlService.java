@@ -70,7 +70,9 @@ public class AbstractEntityReactiveSqlService<ENTITY extends AbstractEntity, DTO
                 .onItem().ifNotNull().transformToUni(entity -> {
                     mapper.patchToEntity(dto, entity);
                     if (entity instanceof AbstractEntityHistoricalSQL historicalEntity) {
-                        historicalEntity.setEndValidityDate(Instant.now());
+                        if (historicalEntity.getEndValidityDate() == null) {
+                            historicalEntity.setEndValidityDate(Instant.now());
+                        }
 
                         AbstractEntityHistoricalMongo newEntity = (AbstractEntityHistoricalMongo) mapper.cloneToNewInstance(entity);
                         newEntity.setId(null);

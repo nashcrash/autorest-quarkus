@@ -21,8 +21,8 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
     }
 
     public static Date parseDate(String referenceDate, String[] patterns, String message) {
-        if (referenceDate==null) return null;
-        patterns = (patterns == null || patterns.length < 1) ? new String[] {ISO_PATTERN} : patterns;
+        if (referenceDate == null) return null;
+        patterns = (patterns == null || patterns.length < 1) ? new String[]{ISO_PATTERN} : patterns;
         message = (message == null || message.isBlank()) ? DEFAULT_MESSAGE : message;
         Date refDate = null;
         for (String pattern : patterns) {

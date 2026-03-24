@@ -3,10 +3,8 @@ package io.github.nashcrash.autorest.common.entity.rest;
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
-import io.quarkus.mongodb.panache.Panache;
 import io.quarkus.mongodb.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
@@ -78,7 +76,9 @@ public class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO e
             throw new CustomException(Response.Status.NOT_FOUND, EM_ENTITY_NOT_FOUND_WITH_ID + dto.getId());
         mapper.patchToEntity(dto, entity);
         if (entity instanceof AbstractEntityHistoricalMongo historicalEntity) {
-            historicalEntity.setEndValidityDate(Instant.now());
+            if (historicalEntity.getEndValidityDate() == null) {
+                historicalEntity.setEndValidityDate(Instant.now());
+            }
 
             AbstractEntityHistoricalMongo newEntity = (AbstractEntityHistoricalMongo) mapper.cloneToNewInstance(entity);
             newEntity.setId(null);
