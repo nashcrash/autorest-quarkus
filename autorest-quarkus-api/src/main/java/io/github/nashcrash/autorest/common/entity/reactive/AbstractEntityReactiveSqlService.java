@@ -5,11 +5,9 @@ import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -52,6 +50,14 @@ public class AbstractEntityReactiveSqlService<ENTITY extends AbstractEntity, DTO
         }
         return eventoReactivePanacheQuery.page(findDTO.getPage(), findDTO.getLimit()).list()
                 .onItem().transform(mapper::toDtos);
+    }
+
+    public Uni<Long> count(FindDTO findDTO) {
+        if (StringUtils.isNotBlank(findDTO.getQuery())) {
+            return repository.count(findDTO.getQuery());
+        } else {
+            return repository.count();
+        }
     }
 
     public Uni<DTO> upsert(DTO dto) {

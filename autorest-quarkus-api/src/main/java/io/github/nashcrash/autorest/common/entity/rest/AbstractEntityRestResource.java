@@ -3,6 +3,7 @@ package io.github.nashcrash.autorest.common.entity.rest;
 import io.github.nashcrash.autorest.common.entity.AbstractDTO;
 import io.github.nashcrash.autorest.common.entity.AbstractEntity;
 import io.github.nashcrash.autorest.common.entity.FindDTO;
+import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import io.smallrye.common.annotation.Blocking;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -49,6 +50,20 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
     )
     public List<DTO> find(@Valid FindDTO dto) {
         return service.search(dto);
+    }
+
+    @POST
+    @Path("/findAndCount")
+    @Operation(
+            summary = "Search resources with filtering and pagination with totalCount"
+    )
+    public ResultDTO<DTO> findAndCount(@Valid FindDTO dto) {
+        ResultDTO<DTO> result = new ResultDTO<>();
+        result.setTotalCount(service.count(dto));
+        result.setElements(service.search(dto));
+        result.setPage(dto.getPage());
+        result.setLimit(dto.getLimit());
+        return result;
     }
 
     @POST

@@ -1,6 +1,7 @@
 package io.github.nashcrash.autorest.common.entity.rest;
 
 import io.github.nashcrash.autorest.common.entity.*;
+import io.smallrye.mutiny.Uni;
 import org.bson.conversions.Bson;
 
 import java.util.List;
@@ -11,6 +12,7 @@ public interface AbstractEntityRestService<ENTITY extends AbstractEntity, DTO ex
     DTO findById(String id);
 
     List<DTO> search(FindDTO findDTO);
+    Long count(FindDTO findDTO);
 
     DTO create(DTO dto);
 

@@ -3,7 +3,6 @@ package io.github.nashcrash.autorest.common.entity.reactive;
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
-import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
 import io.quarkus.mongodb.panache.common.reactive.Panache;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.common.Sort;
@@ -56,6 +55,14 @@ public class AbstractEntityReactiveMongoService<ENTITY extends AbstractEntity, D
         }
         return eventoReactivePanacheQuery.page(findDTO.getPage(), findDTO.getLimit()).list()
                 .onItem().transform(mapper::toDtos);
+    }
+
+    public Uni<Long> count(FindDTO findDTO) {
+        if (StringUtils.isNotBlank(findDTO.getQuery())) {
+            return repository.count(findDTO.getQuery());
+        } else {
+            return repository.count();
+        }
     }
 
     public Uni<DTO> upsert(DTO dto) {

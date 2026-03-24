@@ -1,6 +1,7 @@
 package io.github.nashcrash.autorest.common.entity.rest;
 
 import io.github.nashcrash.autorest.common.entity.FindDTO;
+import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -23,6 +24,10 @@ public interface RestResource<DTO> {
     @POST
     @Path("/find")
     List<DTO> find(@Valid FindDTO dto);
+
+    @POST
+    @Path("/findAndCount")
+    ResultDTO<DTO> findAndCount(@Valid FindDTO dto);
 
     @POST
     DTO create(@Valid DTO dto);

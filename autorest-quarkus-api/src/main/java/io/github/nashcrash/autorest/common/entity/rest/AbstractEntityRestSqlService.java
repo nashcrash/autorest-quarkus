@@ -56,6 +56,14 @@ public class AbstractEntityRestSqlService<ENTITY extends AbstractEntity, DTO ext
 
     }
 
+    public Long count(FindDTO findDTO) {
+        if (StringUtils.isNotBlank(findDTO.getQuery())) {
+            return repository.count(findDTO.getQuery());
+        } else {
+            return repository.count();
+        }
+    }
+
     public DTO upsert(DTO dto) {
         ENTITY entity = mapper.toEntity(dto);
         repository.persist(entity);

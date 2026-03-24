@@ -57,6 +57,14 @@ public class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO e
 
     }
 
+    public Long count(FindDTO findDTO) {
+        if (StringUtils.isNotBlank(findDTO.getQuery())) {
+            return repository.count(findDTO.getQuery());
+        } else {
+            return repository.count();
+        }
+    }
+
     public DTO upsert(DTO dto) {
         ENTITY entity = mapper.toEntity(dto);
         repository.persistOrUpdate(entity);

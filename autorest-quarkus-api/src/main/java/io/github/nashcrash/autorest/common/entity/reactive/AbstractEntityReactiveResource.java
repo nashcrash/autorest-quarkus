@@ -3,6 +3,7 @@ package io.github.nashcrash.autorest.common.entity.reactive;
 import io.github.nashcrash.autorest.common.entity.AbstractDTO;
 import io.github.nashcrash.autorest.common.entity.AbstractEntity;
 import io.github.nashcrash.autorest.common.entity.FindDTO;
+import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import jakarta.inject.Inject;
@@ -50,6 +51,26 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
     )
     public Uni<List<DTO>> find(@Valid FindDTO dto) {
         return service.search(dto);
+    }
+
+    @POST
+    @Path("/findAndCount")
+    @Operation(
+            summary = "Search resources with filtering and pagination with totalCount"
+    )
+    public Uni<ResultDTO<DTO>> findAndCount(@Valid FindDTO dto) {
+        return Uni.combine().all().unis(
+                        service.search(dto),
+                        service.count(dto)
+                ).asTuple()
+                .map(tuple -> {
+                    ResultDTO<DTO> result = new ResultDTO<>();
+                    result.setElements(tuple.getItem1());
+                    result.setTotalCount(tuple.getItem2());
+                    result.setPage(dto.getPage());
+                    result.setLimit(dto.getLimit());
+                    return result;
+                });
     }
 
     @POST

@@ -1,11 +1,10 @@
 package io.github.nashcrash.autorest.common.entity.reactive;
 
 import io.github.nashcrash.autorest.common.entity.FindDTO;
+import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import io.smallrye.mutiny.Uni;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import java.util.List;
 
@@ -24,6 +23,10 @@ public interface ReactiveResource<DTO> {
     @POST
     @Path("/find")
     Uni<List<DTO>> find(@Valid FindDTO dto);
+
+    @POST
+    @Path("/findAndCount")
+    Uni<ResultDTO<DTO>> findAndCount(@Valid FindDTO dto);
 
     @POST
     Uni<DTO> create(@Valid DTO dto);

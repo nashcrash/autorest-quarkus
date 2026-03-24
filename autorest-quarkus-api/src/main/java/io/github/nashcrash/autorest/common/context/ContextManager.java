@@ -1,5 +1,6 @@
 package io.github.nashcrash.autorest.common.context;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -34,5 +35,9 @@ public class ContextManager {
     public static Map<String, String> getAllContext() {
         init();
         return context.get();
+    }
+    public static void setAllContext(Map<String, String> map) {
+        init();
+        context.set(new LinkedHashMap<>(map));
     }
 }
