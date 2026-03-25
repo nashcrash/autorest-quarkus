@@ -22,7 +22,7 @@ public class ContextFilter implements ContainerRequestFilter {
             if (!Objects.isNull(entry.getKey())) {
                 String keyLowerCase = entry.getKey().toLowerCase();
 
-                if (keyLowerCase.startsWith("x-") || keyLowerCase.equals("authorization") || keyLowerCase.equals("accept")) {
+                if (keyLowerCase.startsWith("x-") || keyLowerCase.equals("authorization") || keyLowerCase.startsWith("accept")) {
                     try {
                         ContextManager.setParameter(ContextHeader.fromString(keyLowerCase).getValue(), entry.getValue().get(0));
                     } catch (IllegalArgumentException e) {
