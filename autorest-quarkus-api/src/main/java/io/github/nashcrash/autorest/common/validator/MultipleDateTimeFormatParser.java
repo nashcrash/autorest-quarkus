@@ -7,6 +7,13 @@ import jakarta.ws.rs.ext.ParamConverter;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.Date;
 
 public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
@@ -27,7 +34,13 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
         Date refDate = null;
         for (String pattern : patterns) {
             try {
-                refDate = new SimpleDateFormat(pattern).parse(referenceDate);
+                String[] pattern_parts = pattern.split("@T");
+                refDate = new SimpleDateFormat(pattern_parts[0]).parse(referenceDate);
+                if (pattern_parts.length>1) {
+                    String day=new SimpleDateFormat("yyyy-MM-dd").format(refDate);
+                    ZoneId zoneId = (pattern_parts.length>2) ? ZoneId.of(pattern_parts[2]) : ZoneId.systemDefault();
+                    refDate = combineToDate(day, pattern_parts[1], zoneId);
+                }
                 break;
             } catch (ParseException ignore) {
             }
@@ -36,6 +49,17 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
             throw new CustomException(Response.Status.BAD_REQUEST, MessageFormat.format(message, referenceDate));
         }
         return refDate;
+    }
+
+    private static Date combineToDate(String dateStr, String timeStr, ZoneId zoneId) {
+        DateTimeFormatter timeFormatter = new DateTimeFormatterBuilder()
+                .appendPattern("HH:mm:ss")
+                .appendFraction(ChronoField.MILLI_OF_SECOND, 0, 3, true)
+                .toFormatter();
+        LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalTime time = LocalTime.parse(timeStr, timeFormatter);
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(date, time, zoneId);
+        return Date.from(zonedDateTime.toInstant());
     }
 
     @Override
