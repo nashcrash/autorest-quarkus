@@ -1,11 +1,11 @@
 package io.github.nashcrash.autorest.common.exception.strategy;
 
+import com.mongodb.MongoWriteException;
 import io.github.nashcrash.autorest.common.exception.ExceptionStrategy;
 import io.github.nashcrash.autorest.common.exception.FailureMessageDTO;
+import io.quarkus.arc.properties.UnlessBuildProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
-import com.mongodb.MongoWriteException;
-import io.quarkus.arc.properties.UnlessBuildProperty;
 
 @ApplicationScoped
 // This bean will ONLY be registered if 'quarkus.mongodb.enabled' is NOT set to false
@@ -18,15 +18,15 @@ public class MongoWriteExceptionStrategy implements ExceptionStrategy<MongoWrite
     }
 
     @Override
-    public void handle(MongoWriteException e, FailureMessageDTO.FailureMessageDTOBuilder builder) {
+    public FailureMessageDTO handle(MongoWriteException e, FailureMessageDTO failureMessageDTO) {
         Response.Status status = switch (e.getError().getCode()) {
             case 11000 -> Response.Status.CONFLICT;
             case 40413 -> Response.Status.EXPECTATION_FAILED;
             default -> Response.Status.BAD_REQUEST;
         };
 
-        builder.status(status.getStatusCode())
+        return failureMessageDTO.toBuilder().status(status.getStatusCode())
                 .error(status.getReasonPhrase())
-                .message(e.getError().getMessage());
+                .message(e.getError().getMessage()).build();
     }
 }

@@ -5,5 +5,5 @@ public interface ExceptionStrategy<T extends Throwable> {
     Class<T> getExceptionClass();
 
     // Handles the exception and builds the DTO
-    void handle(T exception, FailureMessageDTO.FailureMessageDTOBuilder builder);
+    FailureMessageDTO handle(T exception, FailureMessageDTO failureMessageDTO);
 }

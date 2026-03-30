@@ -17,16 +17,17 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
     @Inject
     Instance<ExceptionStrategy<? extends Throwable>> strategies;
 
+    @SuppressWarnings("unchecked")
     @Override
     public Response toResponse(Throwable e) {
-        FailureMessageDTO.FailureMessageDTOBuilder builder = FailureMessageDTO.builder()
-                .timestamp(Instant.now());
+        FailureMessageDTO failureMessageDTO = FailureMessageDTO.builder()
+                .timestamp(Instant.now()).build();
 
         // Find a matching strategy for the thrown exception
         boolean handled = false;
         for (ExceptionStrategy strategy : strategies) {
             if (strategy.getExceptionClass().isInstance(e)) {
-                strategy.handle(e, builder);
+                failureMessageDTO = strategy.handle(e, failureMessageDTO);
                 handled = true;
                 break;
             }
@@ -34,15 +35,13 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
         // Fallback (the "else" for generic Throwable)
         if (!handled) {
-            builder.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode())
+            failureMessageDTO = failureMessageDTO.toBuilder()
+                    .status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode())
                     .error(Response.Status.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                    .message(e.getMessage());
+                    .message(e.getMessage()).build();
         }
 
-        FailureMessageDTO failureMessageDTO = builder
-                .path(ContextManager.getParameter("path"))
-                .build();
-
+        failureMessageDTO.setPath(ContextManager.getParameter("path"));
         log.error(failureMessageDTO.toString(), e);
 
         return Response.status(Response.Status.fromStatusCode(failureMessageDTO.getStatus()))

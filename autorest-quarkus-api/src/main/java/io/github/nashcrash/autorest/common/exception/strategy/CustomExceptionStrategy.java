@@ -13,10 +13,10 @@ public class CustomExceptionStrategy implements ExceptionStrategy<CustomExceptio
     }
 
     @Override
-    public void handle(CustomException e, FailureMessageDTO.FailureMessageDTOBuilder builder) {
-        builder.status(e.getStatus().getStatusCode())
+    public FailureMessageDTO handle(CustomException e, FailureMessageDTO failureMessageDTO) {
+        return failureMessageDTO.toBuilder().status(e.getStatus().getStatusCode())
                 .error(e.getStatus().getReasonPhrase())
                 .message(e.getMessage())
-                .extra(e.getExtra());
+                .extra(e.getExtra()).build();
     }
 }
