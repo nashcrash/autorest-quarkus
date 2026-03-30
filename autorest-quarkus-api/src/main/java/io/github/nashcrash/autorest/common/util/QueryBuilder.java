@@ -1,7 +1,6 @@
 package io.github.nashcrash.autorest.common.util;
 
 import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
 
 import java.time.Instant;
 import java.time.LocalDate;

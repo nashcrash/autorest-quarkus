@@ -1,7 +1,6 @@
 package io.github.nashcrash.autorest.common.util;
 
 import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -30,16 +29,6 @@ public class IdUtils {
             stringKeys.add(String.valueOf(element));
         }
         return Base64.getEncoder().encodeToString(StringUtils.join(stringKeys, "|").getBytes(StandardCharsets.UTF_8));
-    }
-
-    public static String objectIdToString(ObjectId objectId) {
-        return objectId.toString();
-    }
-
-    public static ObjectId stringToObjectId(String objectIdAsString) {
-        if (objectIdAsString != null && !objectIdAsString.isBlank())
-            return new ObjectId(objectIdAsString);
-        return null;
     }
 
     public static String randomUUID() {
