@@ -21,17 +21,7 @@ public class MessagesUtils {
      * @return The formatted message string or a fallback if the key is missing
      */
     public static String getMessage(Integer code, List<String> params, String defaultMessage) {
-        Locale locale = Locale.ITALY; //Default
-        String acceptLanguage = ContextManager.getParameter(HttpHeaders.ACCEPT_LANGUAGE);
-        if (StringUtils.isNotBlank(acceptLanguage)) {
-            try {
-                List<Locale.LanguageRange> ranges = Locale.LanguageRange.parse(acceptLanguage);
-                if (!ranges.isEmpty()) {
-                    Locale found = Locale.lookup(ranges, List.of(Locale.getAvailableLocales()));
-                    locale = (found!=null) ? found : locale;
-                }
-            } catch (IllegalArgumentException ignore) {}
-        }
+        Locale locale = getLocaleFromHeader();
 
         try {
             ResourceBundle messageBundle = ResourceBundle.getBundle("messages", locale);
@@ -42,5 +32,24 @@ public class MessagesUtils {
         } catch (MissingResourceException e) {
             return defaultMessage;
         }
+    }
+
+    public static Locale getLocaleFromHeader() {
+        return getLocaleFromHeader(Locale.getDefault()); //Default
+    }
+
+    public static Locale getLocaleFromHeader(Locale defaultLocale) {
+        Locale locale = defaultLocale;
+        String acceptLanguage = ContextManager.getParameter(HttpHeaders.ACCEPT_LANGUAGE);
+        if (StringUtils.isNotBlank(acceptLanguage)) {
+            try {
+                List<Locale.LanguageRange> ranges = java.util.Locale.LanguageRange.parse(acceptLanguage);
+                if (!ranges.isEmpty()) {
+                    Locale found = java.util.Locale.lookup(ranges, List.of(Locale.getAvailableLocales()));
+                    locale = (found!=null) ? found : locale;
+                }
+            } catch (IllegalArgumentException ignore) {}
+        }
+        return locale;
     }
 }

@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.Objects;
 
 @Provider
-@Priority(Priorities.USER)
+@Priority(Priorities.AUTHENTICATION)
 @Slf4j
 public class ContextFilter implements ContainerRequestFilter {
 

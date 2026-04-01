@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Provider
-@Priority(Priorities.USER)
+@Priority(Priorities.AUTHENTICATION - 100)
 @Slf4j
 public class RequiredFilter implements ContainerRequestFilter {
     @ConfigProperty(name = "required.header")
