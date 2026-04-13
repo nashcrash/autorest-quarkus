@@ -18,6 +18,8 @@ import java.util.Map;
 
 @Slf4j
 public class AbstractEntityRestSqlService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityRestService<ENTITY, DTO> {
+    public static final String EM_ENTITY_ALREADY_HISTORIZED_WITH_ID = "Entity already historized with id: ";
+
     public static final String EM_ENTITY_NOT_FOUND_WITH_ID = "Entity not found with id: ";
     public static final String EM_ENTITY_ALREADY_EXISTS = "Entity already exists with id: ";
     public static final String EM_MISSING_ORDER_DIRECTION = "Missing orderDirection";
@@ -75,21 +77,34 @@ public class AbstractEntityRestSqlService<ENTITY extends AbstractEntity, DTO ext
         ENTITY entity = repository.findById(Long.parseLong(dto.getId()));
         if (entity == null)
             throw new CustomException(Response.Status.NOT_FOUND, EM_ENTITY_NOT_FOUND_WITH_ID + dto.getId());
-        mapper.patchToEntity(dto, entity);
-        if (entity instanceof AbstractEntityHistoricalSQL historicalEntity) {
-            if (historicalEntity.getEndValidityDate() == null) {
-                historicalEntity.setEndValidityDate(Instant.now());
+        if (entity instanceof AbstractEntityHistoricalSQL historicalEntity && dto instanceof AbstractHistoricalDTO historicalDTO) {
+            //If it is already historicized, there was a conflict....
+            if (historicalEntity.getEndValidityDate() != null) {
+                throw new CustomException(Response.Status.CONFLICT, EM_ENTITY_ALREADY_HISTORIZED_WITH_ID + dto.getId());
             }
+            //I apply the DTO: I use the end of validity date as closure of the effect...
+            if (historicalDTO.getEndValidityDate() == null) {
+                historicalDTO.setEndValidityDate(Instant.now());
+            }
+            historicalEntity.setEndValidityDate(historicalDTO.getEndValidityDate());
 
-            AbstractEntityHistoricalMongo newEntity = (AbstractEntityHistoricalMongo) mapper.cloneToNewInstance(entity);
-            newEntity.setId(null);
+            AbstractEntityHistoricalSQL newEntity = (AbstractEntityHistoricalSQL) mapper.cloneToNewInstance(entity);
+            mapper.patchToEntity(dto, (ENTITY) newEntity);
             newEntity.setStartValidityDate(historicalEntity.getEndValidityDate());
+            newEntity.setId(null);
             newEntity.setEndValidityDate(null);
+            newEntity.setInsertionUser(null);
+            newEntity.setInsertionDate(null);
+            newEntity.setLastModifiedUser(null);
+            newEntity.setLastModifiedDate(null);
+            ///Make sure to use user in context...
+            mapper.addExtraEntityData((ENTITY) newEntity);
 
             repository.persist((ENTITY) historicalEntity);
             repository.persist((ENTITY) newEntity);
             entity = (ENTITY) newEntity;
         } else {
+            mapper.patchToEntity(dto, entity);
             repository.persist(entity);
         }
         return mapper.toDto(entity);

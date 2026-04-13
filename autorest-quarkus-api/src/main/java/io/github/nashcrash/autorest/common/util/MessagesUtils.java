@@ -5,10 +5,7 @@ import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.commons.lang3.StringUtils;
 
 import java.text.MessageFormat;
-import java.util.List;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import java.util.*;
 
 
 public class MessagesUtils {
@@ -20,15 +17,16 @@ public class MessagesUtils {
      * @param defaultMessage The message returned if the code is missing
      * @return The formatted message string or a fallback if the key is missing
      */
-    public static String getMessage(Integer code, List<String> params, String defaultMessage) {
+    public static String getMessage(String code, List<String> params, String defaultMessage) {
         Locale locale = getLocaleFromHeader();
 
         try {
             ResourceBundle messageBundle = ResourceBundle.getBundle("messages", locale);
             String key = String.valueOf(code);
             String pattern = messageBundle.getString(key);
-            Object[] arguments = (params != null) ? params.toArray() : new Object[0];
-            return MessageFormat.format(pattern, arguments);
+            String[] arguments = (params != null) ? params.toArray(new String[0]) : new String[0];
+            arguments = (String[]) Arrays.stream(arguments).map(e->getMessage(e, null, e)).toArray();
+            return MessageFormat.format(pattern, (Object[]) arguments);
         } catch (MissingResourceException e) {
             return defaultMessage;
         }
