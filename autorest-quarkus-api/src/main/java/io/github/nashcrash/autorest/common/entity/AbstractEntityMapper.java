@@ -1,7 +1,8 @@
 package io.github.nashcrash.autorest.common.entity;
 
+import io.github.nashcrash.autorest.common.context.ContextBean;
 import io.github.nashcrash.autorest.common.context.ContextHeader;
-import io.github.nashcrash.autorest.common.context.ContextManager;
+import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.*;
 
@@ -9,14 +10,17 @@ import java.time.Instant;
 import java.util.List;
 
 @Mapper
-public interface AbstractEntityMapper<ENTITY extends AbstractEntity, DTO extends AbstractDTO> {
+public abstract class AbstractEntityMapper<ENTITY extends AbstractEntity, DTO extends AbstractDTO> {
+    @Inject
+    ContextBean contextBean;
+
     @Mapping(target = "id", ignore = true)
-    ENTITY cloneToNewInstance(ENTITY entity);
+    public abstract ENTITY cloneToNewInstance(ENTITY entity);
 
     @Mapping(target = "id", source = "id")
-    DTO toDto(ENTITY entity);
+    public abstract DTO toDto(ENTITY entity);
 
-    ENTITY toEntity(DTO dto);
+    public abstract ENTITY toEntity(DTO dto);
 
     @InheritConfiguration(
             name = "toEntity"
@@ -24,15 +28,15 @@ public interface AbstractEntityMapper<ENTITY extends AbstractEntity, DTO extends
     @BeanMapping(
             nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
     )
-    void patchToEntity(DTO dto, @MappingTarget ENTITY entity);
+    public abstract void patchToEntity(DTO dto, @MappingTarget ENTITY entity);
 
-    List<DTO> toDtos(List<ENTITY> entities);
+    public abstract List<DTO> toDtos(List<ENTITY> entities);
 
-    List<ENTITY> toEntities(List<DTO> dtos);
+    public abstract List<ENTITY> toEntities(List<DTO> dtos);
 
     @AfterMapping
-    default void addExtraEntityData(@MappingTarget ENTITY entity) {
-        String username = ContextManager.getParameter(ContextHeader.X_USERNAME.getValue());
+    public  void addExtraEntityData(@MappingTarget ENTITY entity) {
+        String username = contextBean.get(ContextHeader.X_USERNAME.getValue());
         Instant now = Instant.now();
         if (StringUtils.isEmpty(entity.getInsertionUser())) {
             entity.setInsertionUser(username);

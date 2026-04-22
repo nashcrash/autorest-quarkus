@@ -1,14 +1,19 @@
 package io.github.nashcrash.autorest.common.util;
 
-import io.github.nashcrash.autorest.common.context.ContextManager;
+import io.github.nashcrash.autorest.common.context.ContextBean;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.commons.lang3.StringUtils;
 
 import java.text.MessageFormat;
 import java.util.*;
 
-
+@ApplicationScoped
 public class MessagesUtils {
+    @Inject
+    ContextBean contextBean;
+
     /**
      * Retrieves and formats a message based on the provided code and locale from context.
      *
@@ -17,7 +22,7 @@ public class MessagesUtils {
      * @param defaultMessage The message returned if the code is missing
      * @return The formatted message string or a fallback if the key is missing
      */
-    public static String getMessage(String code, List<String> params, String defaultMessage) {
+    public String getMessage(String code, List<String> params, String defaultMessage) {
         Locale locale = getLocaleFromHeader();
 
         try {
@@ -32,13 +37,13 @@ public class MessagesUtils {
         }
     }
 
-    public static Locale getLocaleFromHeader() {
+    public Locale getLocaleFromHeader() {
         return getLocaleFromHeader(Locale.getDefault()); //Default
     }
 
-    public static Locale getLocaleFromHeader(Locale defaultLocale) {
+    public Locale getLocaleFromHeader(Locale defaultLocale) {
         Locale locale = defaultLocale;
-        String acceptLanguage = ContextManager.getParameter(HttpHeaders.ACCEPT_LANGUAGE);
+        String acceptLanguage = contextBean.get(HttpHeaders.ACCEPT_LANGUAGE);
         if (StringUtils.isNotBlank(acceptLanguage)) {
             try {
                 List<Locale.LanguageRange> ranges = java.util.Locale.LanguageRange.parse(acceptLanguage);

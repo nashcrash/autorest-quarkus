@@ -1,6 +1,6 @@
 package io.github.nashcrash.autorest.common.exception;
 
-import io.github.nashcrash.autorest.common.context.ContextManager;
+import io.github.nashcrash.autorest.common.context.ContextBean;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
@@ -14,6 +14,8 @@ import java.time.Instant;
 @Slf4j
 @Provider
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
+    @Inject
+    ContextBean contextBean;
     @Inject
     Instance<ExceptionStrategy<? extends Throwable>> strategies;
 
@@ -41,7 +43,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
                     .message(e.getMessage()).build();
         }
 
-        failureMessageDTO.setPath(ContextManager.getParameter("path"));
+        failureMessageDTO.setPath(contextBean.get("path"));
         log.error(failureMessageDTO.toString(), e);
 
         return Response.status(Response.Status.fromStatusCode(failureMessageDTO.getStatus()))

@@ -15,7 +15,6 @@ public class IdUtils {
         List<String> stringKeys = new ArrayList<>();
         for (Object element : keys) {
             if (element instanceof Instant instant) {
-                //Old version: element = instant.getEpochSecond() + "_" + instant.getNano();
                 element = DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneId.of("UTC")).format(instant);
             } else if (element instanceof ZonedDateTime zonedDateTime) {
                 element = zonedDateTime.format(DateTimeFormatter.ISO_DATE_TIME);

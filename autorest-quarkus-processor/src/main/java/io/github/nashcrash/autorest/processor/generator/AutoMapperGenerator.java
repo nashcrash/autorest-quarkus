@@ -25,9 +25,9 @@ public class AutoMapperGenerator {
 
         ParameterizedTypeName superParameterizedTypeName = ParameterizedTypeName.get(ClassName.get("io.github.nashcrash.autorest.common.entity", "AbstractEntityMapper"), entityType, dtoType);
 
-        TypeSpec.Builder mapperInterface = TypeSpec.interfaceBuilder(entityName + "Mapper")
-                .addModifiers(Modifier.PUBLIC)
-                .addSuperinterface(superParameterizedTypeName)
+        TypeSpec.Builder mapperInterface = TypeSpec.classBuilder(entityName + "Mapper")
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .superclass(superParameterizedTypeName)
                 .addAnnotation(genericRestApiDTO.getGeneratedAnnotationSpec())
                 .addAnnotation(AnnotationSpec.builder(ClassName.get("org.mapstruct", "Mapper"))
                         .addMember("componentModel", "$S", "jakarta") // Integrate MapStruct with Quarkus CDI
@@ -45,7 +45,6 @@ public class AutoMapperGenerator {
     private MethodSpec generateExtraEntityData(GenericRestApiDTO genericRestApiDTO) {
         TypeElement entityElement = genericRestApiDTO.getEntityElement();
         TypeName entityType = genericRestApiDTO.getEntityType();
-        ClassName superClassName = ClassName.get("io.github.nashcrash.autorest.common.entity", "AbstractEntityMapper");
         ClassName idUtils = ClassName.get("io.github.nashcrash.autorest.common.util", "IdUtils");
         ClassName mappingTarget = ClassName.get("org.mapstruct", "MappingTarget");
 
@@ -56,12 +55,12 @@ public class AutoMapperGenerator {
         MethodSpec.Builder createMethod = MethodSpec.methodBuilder("addExtraEntityData")
                 .addAnnotation(ClassName.get(Override.class))
                 .addAnnotation(ClassName.get("org.mapstruct", "AfterMapping"))
-                .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
+                .addModifiers(Modifier.PUBLIC)
                 .returns(TypeName.VOID)
                 .addParameter(ParameterSpec.builder(entityType, "entity")
                         .addAnnotation(mappingTarget)
                         .build())
-                .addStatement("$T.super.addExtraEntityData(entity)", superClassName)
+                .addStatement("super.addExtraEntityData(entity)")
                 .addComment("Set a logical ID")
                 .addStatement("entity.setId($T.generateId($N))", idUtils, StringUtils.join(params, ", "));
 
