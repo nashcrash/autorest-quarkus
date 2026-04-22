@@ -3,10 +3,7 @@ package io.github.nashcrash.autorest.common.util;
 import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -18,7 +15,8 @@ public class IdUtils {
         List<String> stringKeys = new ArrayList<>();
         for (Object element : keys) {
             if (element instanceof Instant instant) {
-                element = instant.getEpochSecond() + "_" + instant.getNano();
+                //Old version: element = instant.getEpochSecond() + "_" + instant.getNano();
+                element = DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneId.of("UTC")).format(instant);
             } else if (element instanceof ZonedDateTime zonedDateTime) {
                 element = zonedDateTime.format(DateTimeFormatter.ISO_DATE_TIME);
             } else if (element instanceof LocalDateTime localDateTime) {

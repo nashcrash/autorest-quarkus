@@ -28,5 +28,5 @@ gpg --list-secret-keys --keyid-format LONG
 altrimenti:
 
 ```commandline
-gpg --import /c/Temp/000_Cancellare/<FILE>.asc
+gpg --import chiave_privata.asc
 ```

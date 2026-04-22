@@ -251,5 +251,6 @@ $RECYCLE.BIN/
 
 #maven settings
 /.settings.xml
+/chiave_privata.asc
 /autorest-test/
 /.idea/
