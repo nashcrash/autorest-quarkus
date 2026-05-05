@@ -80,10 +80,12 @@ public class AutoResourceGenerator {
                 .addStatement("return service.aggregate(\n" +
                                 "    $L,\n" + // fieldsBlock
                                 "    $L,\n" + // accumulatorsBlock
+                                "    $L,\n" + // unwindFields
                                 "    $T.builder().query(query).orderBy(orderBy).orderDirection(orderDirection).page(page).limit(limit).build(),\n" +
                                 "    $T.class)",
                         generateFieldsBlock(aggregateDTO.getGroupBy()),
                         generateAccumulatorsBlock(aggregateDTO.getAggregateBy()),
+                        generateUnwindFieldsBlock(aggregateDTO.getUnwindField()),
                         ClassName.get("io.github.nashcrash.autorest.common.entity", "FindDTO"),
                         aggregateDTO.getDtoTypeName()
                 )
@@ -105,16 +107,28 @@ public class AutoResourceGenerator {
                 .addStatement("return service.aggregate(\n" +
                                 "    $L,\n" + // fieldsBlock
                                 "    $L,\n" + // accumulatorsBlock
+                                "    $L,\n" + // unwindFields
                                 "    findDto,\n" +
                                 "    $T.class)",
                         generateFieldsBlock(aggregateDTO.getGroupBy()),
                         generateAccumulatorsBlock(aggregateDTO.getAggregateBy()),
+                        generateUnwindFieldsBlock(aggregateDTO.getUnwindField()),
                         aggregateDTO.getDtoTypeName()
                 )
                 .build();
     }
 
+    private CodeBlock generateUnwindFieldsBlock(String unwindField) {
+        if (unwindField == null || unwindField.trim().isEmpty()) {
+            return CodeBlock.of("null");
+        }
+        return CodeBlock.of("$S", unwindField);
+    }
+
     private CodeBlock generateAccumulatorsBlock(Map<AccumulatorType, FieldPair> aggregateBy) {
+        if (aggregateBy == null) {
+            return CodeBlock.of("null");
+        }
         ClassName fieldPairTypeClass = ClassName.get("io.github.nashcrash.autorest.common.entity", "FieldPair");
         ClassName accumulatorTypeClass = ClassName.get("io.github.nashcrash.autorest.common.entity", "AccumulatorType");
         CodeBlock.Builder accumulatorsBuilder = CodeBlock.builder().add("$T.of(", ClassName.get(Map.class));
@@ -134,6 +148,9 @@ public class AutoResourceGenerator {
     }
 
     private CodeBlock generateFieldsBlock(List<FieldPair> groupBy) {
+        if (groupBy == null) {
+            return CodeBlock.of("null");
+        }
         ClassName fieldPairTypeClass = ClassName.get("io.github.nashcrash.autorest.common.entity", "FieldPair");
         CodeBlock.Builder fieldsBuilder = CodeBlock.builder().add("$T.of(", ClassName.get(List.class));
 

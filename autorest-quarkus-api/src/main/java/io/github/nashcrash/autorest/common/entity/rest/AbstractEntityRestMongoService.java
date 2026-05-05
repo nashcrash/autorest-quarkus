@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityRestService<ENTITY, DTO> {
+public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityRestService<ENTITY, DTO> {
     public static final String EM_ENTITY_ALREADY_HISTORIZED_WITH_ID = "Entity already historized with id: ";
     public static final String EM_ENTITY_NOT_FOUND_WITH_ID = "Entity not found with id: ";
 
@@ -111,8 +111,8 @@ public class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO e
         repository.deleteById(id);
     }
 
-    public <T> List<T> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, FindDTO findDTO, Class<T> clazz) {
-        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, findDTO);
+    public <T> List<T> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, unwindFields, findDTO);
         return this.repository.mongoCollection().aggregate(pipeline, clazz).into(new ArrayList<>());
     }
 }

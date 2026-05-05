@@ -23,6 +23,10 @@ public @interface Aggregate {
         String targetField();
     }
 
+    @interface AggregateUnwindField {
+        String originalField();
+    }
+
     @interface AggregateMapEntry {
         AccumulatorType accumulator();
 
@@ -30,6 +34,6 @@ public @interface Aggregate {
     }
 
     AggregateFieldPair[] groupBy() default {};
-
     AggregateMapEntry[] aggregateBy() default {};
+    AggregateUnwindField unwind() default @AggregateUnwindField(originalField = "");
 }

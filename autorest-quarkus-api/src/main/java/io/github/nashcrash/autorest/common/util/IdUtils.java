@@ -1,5 +1,6 @@
 package io.github.nashcrash.autorest.common.util;
 
+import de.huxhorn.sulky.ulid.ULID;
 import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -30,5 +31,9 @@ public class IdUtils {
 
     public static String randomUUID() {
         return UUID.randomUUID().toString();
+    }
+
+    public static String randomULID() {
+        return new ULID().nextULID();
     }
 }

@@ -21,5 +21,5 @@ public interface AbstractEntityReactiveService<ENTITY extends AbstractEntity, DT
 
     Uni<Void> deleteById(String id);
 
-    <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, FindDTO findDTO, Class<T> clazz);
+    <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String unwindFields, FindDTO findDTO, Class<T> clazz);
 }

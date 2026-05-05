@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class AbstractEntityReactiveMongoService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityReactiveService<ENTITY, DTO> {
+public abstract class AbstractEntityReactiveMongoService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityReactiveService<ENTITY, DTO> {
     public static final String EM_ENTITY_ALREADY_HISTORIZED_WITH_ID = "Entity already historized with id: ";
     public static final String EM_ENTITY_NOT_FOUND_WITH_ID = "Entity not found with id: ";
     public static final String EM_MISSING_ORDER_DIRECTION = "Missing orderDirection";
@@ -112,8 +112,8 @@ public class AbstractEntityReactiveMongoService<ENTITY extends AbstractEntity, D
         return repository.deleteById(id).replaceWithVoid();
     }
 
-    public <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, FindDTO findDTO, Class<T> clazz) {
-        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, findDTO);
+    public <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, unwindFields, findDTO);
         return this.repository.mongoCollection().aggregate(pipeline, clazz).collect().asList();
     }
 }

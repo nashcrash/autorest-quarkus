@@ -35,7 +35,7 @@ import java.util.Set;
  * It coordinates the generation of JAX-RS Resources, Services, and MapStruct Mappers.
  */
 @SupportedAnnotationTypes("io.github.nashcrash.autorest.api.ResourceAPI")
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
+@SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class AutoRestProcessor extends AbstractProcessor {
     public static final String AUTO_GENERATED = "AUTO-GENERATED CODE BY AUTOREST-QUARKUS - DO NOT EDIT";
 
@@ -109,14 +109,14 @@ public class AutoRestProcessor extends AbstractProcessor {
         //Check Aggregate
         List<AggregateDTO> aggregateDTOS = new ArrayList<>();
         Aggregate[] aggregations = entityElement.getAnnotationsByType(Aggregate.class);
-        if (aggregations != null) {
-            for (Aggregate aggregate : aggregations) {
-                TypeElement dtoTypeElement = getDTOTypeElement(aggregate);
-                AggregateDTO aggregateDTO = new AggregateDTO();
-                aggregateDTO.setName(aggregate.name());
-                aggregateDTO.setPath(aggregate.path());
-                aggregateDTO.setDtoTypeElement(dtoTypeElement);
-                aggregateDTO.setDtoTypeName(getTypeName(dtoTypeElement));
+        for (Aggregate aggregate : aggregations) {
+            TypeElement dtoTypeElement = getDTOTypeElement(aggregate);
+            AggregateDTO aggregateDTO = new AggregateDTO();
+            aggregateDTO.setName(aggregate.name());
+            aggregateDTO.setPath(aggregate.path());
+            aggregateDTO.setDtoTypeElement(dtoTypeElement);
+            aggregateDTO.setDtoTypeName(getTypeName(dtoTypeElement));
+            if (aggregate.groupBy() != null) {
                 for (Aggregate.AggregateFieldPair aggregateFieldPair : aggregate.groupBy()) {
                     if (aggregateDTO.getGroupBy() == null) aggregateDTO.setGroupBy(new ArrayList<>());
                     aggregateDTO.getGroupBy().add(FieldPair.builder()
@@ -124,6 +124,8 @@ public class AutoRestProcessor extends AbstractProcessor {
                             .targetField(aggregateFieldPair.targetField())
                             .build());
                 }
+            }
+            if (aggregate.aggregateBy() != null) {
                 for (Aggregate.AggregateMapEntry aggregateMapEntry : aggregate.aggregateBy()) {
                     if (aggregateDTO.getAggregateBy() == null) aggregateDTO.setAggregateBy(new HashMap<>());
                     aggregateDTO.getAggregateBy().put(
@@ -133,8 +135,11 @@ public class AutoRestProcessor extends AbstractProcessor {
                                     .targetField(aggregateMapEntry.value().targetField())
                                     .build());
                 }
-                aggregateDTOS.add(aggregateDTO);
             }
+            if (aggregate.unwind() != null && !aggregate.unwind().originalField().isBlank()) {
+                aggregateDTO.setUnwindField(aggregate.unwind().originalField());
+            }
+            aggregateDTOS.add(aggregateDTO);
         }
 
         GenericRestApiDTO genericRestApiDTO = GenericRestApiDTO.builder()

@@ -23,4 +23,5 @@ public class AggregateDTO {
     private TypeName dtoTypeName;
     private List<FieldPair> groupBy;
     private Map<AccumulatorType, FieldPair> aggregateBy;
+    private String unwindField;
 }
