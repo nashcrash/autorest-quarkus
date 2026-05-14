@@ -32,6 +32,8 @@ public class QueryBuilder {
         templateSQL.put("isnotnull", "#field# is NOT NULL");
         templateSQL.put("between", "#field# between #value# and #value2#");
         templateSQL.put("notbetween", "#field# not between #value# and #value2#");
+        templateSQL.put("match", "#field# like #value# ESCAPE '\\'");
+        templateSQL.put("notmatch", "#field# not like #value# ESCAPE '\\'");
         templateMongo.put("objectid", "ObjectId(\"#value#\")");
         templateMongo.put("isodate", "ISODate(\"#value#\")");
         templateMongo.put("escape", "\"");
@@ -50,6 +52,8 @@ public class QueryBuilder {
         templateMongo.put("isnotnull", "#field#: {$ne: null}");
         templateMongo.put("between", "#field#: {$gte: #value#, $lte: #value2#}");
         templateMongo.put("notbetween", "#field#: {$not: {$gte: #value#, $lte: #value2#}}");
+        templateMongo.put("match", "#field#: {$regex: #value#}");
+        templateMongo.put("notmatch", "#field#: {$not: {$regex: #value#}}");
     }
 
     private String type;
@@ -107,6 +111,16 @@ public class QueryBuilder {
 
     public <T> QueryBuilder andGt(String field, T value) {
         conditions.add(new Condition(field, "gt", value));
+        return this;
+    }
+
+    public <T> QueryBuilder andMatch(String field, String value) {
+        conditions.add(new Condition(field, "match", value));
+        return this;
+    }
+
+    public <T> QueryBuilder andNotMatch(String field, String value) {
+        conditions.add(new Condition(field, "notmatch", value));
         return this;
     }
 
@@ -173,6 +187,18 @@ public class QueryBuilder {
         return build(templateSQL);
     }
 
+    /**
+     * Restituisce la stringa "value" con l'escape per l'uso in una regular expression o in una LIKE di tutti i
+     * caratteri che costituiscono dei comandi per la regular expression o jolly di una LIKE
+     * (in modo da avere un match esatto della stringa)
+     *
+     * @param value
+     * @return
+     */
+    public static String cleanMatchString(String value) {
+        return value.replaceAll("([\\\\*+\\[\\](){}|.^$?%_])", "\\\\$1");
+    }
+
     private String build(Map<String, String> template) {
         StringBuilder stringBuilder = new StringBuilder();
         boolean first = true;
@@ -236,8 +262,8 @@ public class QueryBuilder {
         throw new IllegalArgumentException("Conversion error: [" + value.getClass().getSimpleName() + "]: " + value);
     }
 
-    private String escapeList(List<String> codiceTipoFattura, final String escape) {
-        return StringUtils.join(codiceTipoFattura.stream().map(e -> escape + e + escape).collect(Collectors.toList()), ",");
+    private String escapeList(List<String> elements, final String escape) {
+        return StringUtils.join(elements.stream().map(e -> escape + e + escape).collect(Collectors.toList()), ",");
     }
 
     private String dataRange(String fieldName, String dataDa, String dataA) {

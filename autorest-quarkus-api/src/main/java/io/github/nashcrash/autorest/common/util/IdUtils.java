@@ -36,4 +36,9 @@ public class IdUtils {
     public static String randomULID() {
         return new ULID().nextULID();
     }
+
+    public static String[] decodeId(String id) {
+        String decoded = new String(Base64.getDecoder().decode(id), StandardCharsets.UTF_8);
+        return decoded.split("\\|");
+    }
 }
