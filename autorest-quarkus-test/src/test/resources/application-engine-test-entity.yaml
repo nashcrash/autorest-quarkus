@@ -1,0 +1,55 @@
+constant:
+  entity:
+    entity-name: entity
+    entity-base-path: /entity
+    test-data:
+      id: MTAwMDU1
+      expected-get: "testdata/entity/expected_get.json"
+      expected-find: "testdata/entity/expected_find.json"
+      expected-create: "testdata/entity/expected_create.json"
+      expected-update: "testdata/entity/expected_get.json"
+      expected-patch: "testdata/entity/expected_get.json"
+
+entity-test:
+  cases:
+    #STANDARD ENTITY TEST
+    - name: get-${constant.entity.entity-name}-ok
+      type: GET
+      url: ${constant.rootPath}${constant.entity.entity-base-path}/${constant.entity.test-data.id}
+      expected-status: 200
+      expected-file-body: ${constant.entity.test-data.expected-get}
+    - name: find-${constant.entity.entity-name}-ok
+      type: GET
+      url: ${constant.rootPath}${constant.entity.entity-base-path}
+      expected-status: 200
+      expected-file-body: ${constant.entity.test-data.expected-find}
+    - name: create-${constant.entity.entity-name}-ok
+      type: POST
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.entity.entity-base-path}
+      content-type: application/json
+      file-body: "testdata/${constant.entity.entity-name}/new.json"
+      expected-status: 201
+      expected-file-body: ${constant.entity.test-data.expected-create}
+    - name: update-${constant.entity.entity-name}-ok
+      type: PUT
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.entity.entity-base-path}
+      content-type: application/json
+      file-body: ${constant.entity.test-data.expected-update}
+      expected-status: 200
+      expected-file-body: ${constant.entity.test-data.expected-update}
+    - name: patch-${constant.entity.entity-name}-ok
+      type: PATCH
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.entity.entity-base-path}
+      content-type: application/json
+      file-body: ${constant.entity.test-data.expected-patch}
+      expected-status: 200
+      expected-file-body: ${constant.entity.test-data.expected-patch}
+    - name: delete-${constant.entity.entity-name}-ok
+      type: DELETE
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.entity.entity-base-path}/${constant.entity.test-data.id}
+      expected-status: 204
+    #CUSTOM TEST

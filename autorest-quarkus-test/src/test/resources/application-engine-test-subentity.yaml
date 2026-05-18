@@ -1,0 +1,16 @@
+constant:
+  subentity:
+    entity-name: subentity
+    entity-base-path: /entity
+    test-data:
+      id: MTAwMDU1
+      expected-get: "testdata/subentity/expected_get.json"
+      expected-find: "testdata/subentity/expected_find.json"
+      expected-create: "testdata/subentity/expected_create.json"
+      expected-update: "testdata/subentity/expected_get.json"
+      expected-patch: "testdata/subentity/expected_get.json"
+
+subentity-test:
+  cases:
+    #STANDARD ENTITY TEST
+    #CUSTOM TEST

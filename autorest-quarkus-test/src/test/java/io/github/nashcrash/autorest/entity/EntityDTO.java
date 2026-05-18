@@ -18,9 +18,9 @@ import java.util.List;
 @FieldNameConstants
 @SuperBuilder(toBuilder = true)
 @RegisterForReflection
-public class TestEntityDTO extends AbstractDTO {
+public class EntityDTO extends AbstractDTO {
     private String eventCode;
     private String transactionType;
     private Double value;
-    private List<TestSubEntity> movements;
+    private List<SubEntity> movements;
 }

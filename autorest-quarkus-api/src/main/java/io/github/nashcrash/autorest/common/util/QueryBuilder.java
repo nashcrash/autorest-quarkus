@@ -33,7 +33,9 @@ public class QueryBuilder {
         templateSQL.put("between", "#field# between #value# and #value2#");
         templateSQL.put("notbetween", "#field# not between #value# and #value2#");
         templateSQL.put("match", "#field# like #value# ESCAPE '\\'");
+        templateSQL.put("match_insensitive", "#field# ilike #value# ESCAPE '\\'");
         templateSQL.put("notmatch", "#field# not like #value# ESCAPE '\\'");
+        templateSQL.put("notmatch_insensitive", "#field# not ilike #value# ESCAPE '\\'");
         templateMongo.put("objectid", "ObjectId(\"#value#\")");
         templateMongo.put("isodate", "ISODate(\"#value#\")");
         templateMongo.put("escape", "\"");
@@ -53,7 +55,9 @@ public class QueryBuilder {
         templateMongo.put("between", "#field#: {$gte: #value#, $lte: #value2#}");
         templateMongo.put("notbetween", "#field#: {$not: {$gte: #value#, $lte: #value2#}}");
         templateMongo.put("match", "#field#: {$regex: #value#}");
+        templateMongo.put("match_insensitive", "#field#: {$regex: #value#, $options: \"i\"}");
         templateMongo.put("notmatch", "#field#: {$not: {$regex: #value#}}");
+        templateMongo.put("notmatch_insensitive", "#field#: {$not: {$regex: #value#, $options: \"i\"}}");
     }
 
     private String type;
@@ -114,8 +118,18 @@ public class QueryBuilder {
         return this;
     }
 
+    public <T> QueryBuilder andMatch(String field, String value, boolean caseInsensitive) {
+        conditions.add(new Condition(field, caseInsensitive ? "match_insensitive" : "match", value));
+        return this;
+    }
+
     public <T> QueryBuilder andMatch(String field, String value) {
         conditions.add(new Condition(field, "match", value));
+        return this;
+    }
+
+    public <T> QueryBuilder andNotMatch(String field, String value, boolean caseInsensitive) {
+        conditions.add(new Condition(field, caseInsensitive ? "notmatch_insensitive" : "notmatch", value));
         return this;
     }
 

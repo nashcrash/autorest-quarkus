@@ -5,6 +5,7 @@ import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import io.smallrye.mutiny.Uni;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import org.jboss.resteasy.reactive.ResponseStatus;
 
 import java.util.List;
 
@@ -29,6 +30,7 @@ public interface ReactiveResource<DTO> {
     Uni<ResultDTO<DTO>> findAndCount(@Valid FindDTO dto);
 
     @POST
+    @ResponseStatus(201)
     Uni<DTO> create(@Valid DTO dto);
 
     @PUT

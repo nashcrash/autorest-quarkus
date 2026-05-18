@@ -1,12 +1,14 @@
 package io.github.nashcrash.autorest.common.context;
 
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Named;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 @RequestScoped
+@Named
 public class ContextBean {
     private final Map<String, String> data = new HashMap<>();
 

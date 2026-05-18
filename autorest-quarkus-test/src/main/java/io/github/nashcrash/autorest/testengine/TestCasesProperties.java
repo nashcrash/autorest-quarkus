@@ -1,3 +1,5 @@
+package io.github.nashcrash.autorest.testengine;
+
 import io.smallrye.config.WithDefault;
 
 import java.util.List;

@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 @FieldNameConstants
 @SuperBuilder(toBuilder = true)
 @RegisterForReflection
-public class TestSubEntity {
+public class SubEntity {
     private String code;
     private String description;
 }

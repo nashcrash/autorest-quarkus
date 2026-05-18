@@ -17,8 +17,8 @@ import lombok.experimental.SuperBuilder;
 import java.util.List;
 
 @ResourceAPI(
-        basePath = "/testentity",
-        dto = TestEntityDTO.class,
+        basePath = "/entity",
+        dto = EntityDTO.class,
         idFields = {"eventCode"}
 )
 @Aggregate(
@@ -47,7 +47,7 @@ import java.util.List;
 @Aggregate(
         name = "selectSubEntity",
         path = "/selectsubentity",
-        dto = TestSubEntity.class,
+        dto = SubEntity.class,
         unwind = @Aggregate.AggregateUnwindField(originalField = "movements"),
         groupBy = {
                 @Aggregate.AggregateFieldPair(originalField = "transactionType", targetField = "transactionType"),
@@ -56,17 +56,17 @@ import java.util.List;
 )
 @Reactive
 @ResourceClient(configKey = "microservice")
-@MongoEntity(collection = "TestEntity")
+@MongoEntity(collection = "entity")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldNameConstants
 @SuperBuilder(toBuilder = true)
-public class TestEntity extends AbstractEntityMongo {
+public class Entity extends AbstractEntityMongo {
     private String eventCode;
     private String transactionType;
     private Double value;
-    private List<TestSubEntity> movements;
+    private List<SubEntity> movements;
 
 }

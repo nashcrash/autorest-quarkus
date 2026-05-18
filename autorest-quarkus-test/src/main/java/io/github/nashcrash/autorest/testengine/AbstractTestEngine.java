@@ -1,28 +1,18 @@
+package io.github.nashcrash.autorest.testengine;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.result.UpdateResult;
-import io.github.nashcrash.autorest.common.entity.reactive.AbstractEntityReactiveMongoRepository;
-import io.github.nashcrash.autorest.common.entity.reactive.AbstractEntityReactiveMongoService;
-import io.github.nashcrash.autorest.common.entity.rest.AbstractEntityRestMongoRepository;
-import io.github.nashcrash.autorest.common.entity.rest.AbstractEntityRestMongoService;
-import io.quarkus.mongodb.panache.PanacheMongoRepositoryBase;
-import io.quarkus.panache.common.Sort;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import io.smallrye.reactive.messaging.memory.InMemorySink;
 import io.smallrye.reactive.messaging.memory.InMemorySource;
 import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.conversions.Bson;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.spi.Connector;
 import org.hamcrest.Description;
@@ -41,10 +31,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
+public abstract class AbstractTestEngine {
+    protected List<TestCasesProperties> testCasesProperties;
 
-public abstract class TestCasesEngine {
     @Inject
     protected ObjectMapper objectMapper;
 
@@ -53,24 +42,8 @@ public abstract class TestCasesEngine {
     @Connector("smallrye-in-memory")
     protected InMemoryConnector connector;
 
-
-    @Inject
-    @Any
-    protected Instance<AbstractEntityRestMongoService<?, ?>> abstractEntityRestMongoServices;
-    @Inject
-    @Any
-    protected Instance<AbstractEntityReactiveMongoService<?, ?>> abstractEntityReactiveMongoServices;
-
-    protected List<TestCasesProperties> testCasesProperties;
-
-    /**
-     * Need call this constructor
-     * PAY-ATTENTION: Must be public
-     *
-     * @param testCasesProperties TestCasesProperties class
-     */
-    protected TestCasesEngine(TestCasesProperties... testCasesProperties) {
-        this.testCasesProperties = Arrays.stream(testCasesProperties).toList();
+    public void init(TestCasesProperties... testCasesProperties) {
+        this.testCasesProperties = List.of(testCasesProperties);
     }
 
     @Test
@@ -118,30 +91,6 @@ public abstract class TestCasesEngine {
         afterTest(testCase);
     }
 
-    protected <Entity, ID, Aggregatore> AggregateIterable<Aggregatore> addMockAggregator(PanacheMongoRepositoryBase<Entity, ID> repository, Class<Aggregatore> clazz, List<Aggregatore> result) {
-        MongoCollection<Entity> mongoCollection = repository.mongoCollection();
-        if (mongoCollection == null || !Mockito.mockingDetails(mongoCollection).isMock()) {
-            mongoCollection = Mockito.mock(MongoCollection.class);
-            Mockito.when(repository.mongoCollection()).thenReturn(mongoCollection);
-        }
-        AggregateIterable<Aggregatore> aggregateIterable = Mockito.mock(AggregateIterable.class);
-        UpdateResult updateResult = UpdateResult.acknowledged(0, 0L, null);
-        Mockito.when(mongoCollection.updateMany(Mockito.any(Bson.class), Mockito.any(Bson.class))).thenAnswer(e -> updateResult);
-        Mockito.when(mongoCollection.updateOne(Mockito.any(Bson.class), Mockito.any(Bson.class))).thenAnswer(e -> updateResult);
-        Mockito.when(mongoCollection.findOneAndUpdate(Mockito.any(Bson.class), Mockito.any(Bson.class))).thenAnswer(e -> updateResult);
-        Mockito.when(mongoCollection.findOneAndUpdate(Mockito.any(Bson.class), Mockito.any(Bson.class), Mockito.any(FindOneAndUpdateOptions.class))).thenAnswer(e -> updateResult);
-        Mockito.when(mongoCollection.aggregate(Mockito.anyList(), Mockito.eq(clazz))).thenAnswer(s -> aggregateIterable);
-        Mockito.when(aggregateIterable.into(Mockito.anyList())).thenAnswer(invocation -> {
-            List<Aggregatore> listArg = invocation.getArgument(0);
-            if (result != null) {
-                listArg.addAll(result);
-            }
-            return listArg;
-        });
-        return aggregateIterable;
-    }
-
-
     /**
      * This method implement some generic mocks.
      * Override this method to add extra mock definitions.
@@ -150,51 +99,19 @@ public abstract class TestCasesEngine {
      */
     @SuppressWarnings("unchecked")
     protected void prepareMocks(TestCasesProperties.TestCase testCase) {
-        //Inject MongoMock into all AbstractEntityMongoService
-        for (var service : abstractEntityRestMongoServices) {
-            service.setRepository(Mockito.mock(AbstractEntityRestMongoRepository.class));
-        }
-        for (var service : abstractEntityReactiveMongoServices) {
-            service.setRepository(Mockito.mock(AbstractEntityReactiveMongoRepository.class));
-        }
     }
 
     /**
-     * Override this method to add extra operation before test
+     * Override this method to add extra operation before test:
+     * default. Prepare channels for kafka tests...
      *
      * @param testCase
      */
     protected void beforeTest(TestCasesProperties.TestCase testCase) {
-        if (testCase.mocks().isPresent()) {
-            for (TestCasesProperties.TestCase.Mock mock : testCase.mocks().get()) {
-                if ("noSql".equalsIgnoreCase(mock.type())) {
-                    try {
-                        Map<String, String> map = mock.config();
-                        if (map != null) {
-                            String entityClass = map.get("entity-class");
-                            Class<?> aClass = Class.forName(entityClass, true, Thread.currentThread().getContextClassLoader());
-                            String serviceClass = map.get("service-class");
-                            PanacheMongoRepositoryBase<?, ?> currentMock = findPanacheMongoRepositoryBaseMock(serviceClass);
-                            if (currentMock != null) {
-                                final Object get = getResult(map, "get-result", "get-file-result", aClass);
-                                when(currentMock.findById(any())).thenAnswer(invocation -> get);
-
-                                final List<?> find = getList(map, "find-result", "find-file-result", aClass);
-                                when(currentMock.findAll(any(Sort.class))).thenAnswer(invocation -> new MockedPanacheQuery(find));
-                                when(currentMock.find(any(String.class), any(Sort.class))).thenAnswer(invocation -> new MockedPanacheQuery(find));
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
         if (testCase.inputChannels().isPresent()) {
             for (String topic : testCase.inputChannels().get()) {
                 InMemoryConnector.switchIncomingChannelsToInMemory(topic);
             }
-
         }
         if (testCase.outputChannels().isPresent()) {
             for (String topic : testCase.outputChannels().get()) {
@@ -203,94 +120,9 @@ public abstract class TestCasesEngine {
         }
     }
 
-    protected TestCasesProperties.TestCase.Mock findMockConfigByName(TestCasesProperties.TestCase testCase, String name) {
-        if (testCase != null && name != null && !name.isEmpty()) {
-            return testCase.mocks().orElse(new ArrayList<>()).stream().filter(e -> e.name().isPresent() && e.name().get().equals(name)).findFirst().orElse(null);
-        }
-        return null;
-    }
-
-    protected void setMockResponse(Response when, TestCasesProperties.TestCase.Mock mock, String statusKey, String bodyKey, String fileKey, Class<?> aClass) {
-        try {
-            if (mock != null) {
-                Map<String, String> map = mock.config();
-                Object body = this.getResult(map, bodyKey, fileKey, aClass);
-                String status = map.get(statusKey) != null ? (String) map.get(statusKey) : "200";
-                Mockito.when(when).thenAnswer((invocation) -> {
-                    return body != null ? Response.status(Response.Status.fromStatusCode(Integer.parseInt(status))).entity(body).build() : Response.status(Response.Status.fromStatusCode(Integer.parseInt(status))).build();
-                });
-            }
-        } catch (Exception var11) {
-            throw new RuntimeException(var11);
-        }
-    }
-
-    protected void setMockListResponse(Response when, TestCasesProperties.TestCase.Mock mock, String statusKey, String bodyKey, String fileKey, Class<?> aClass) {
-        try {
-            if (mock != null) {
-                Map<String, String> map = mock.config();
-                Object body = this.getList(map, bodyKey, fileKey, aClass);
-                String status = map.get(statusKey) != null ? (String) map.get(statusKey) : "200";
-                Mockito.when(when).thenAnswer((invocation) -> {
-                    return body != null ? Response.status(Response.Status.fromStatusCode(Integer.parseInt(status))).entity(body).build() : Response.status(Response.Status.fromStatusCode(Integer.parseInt(status))).build();
-                });
-            }
-        } catch (Exception var11) {
-            throw new RuntimeException(var11);
-        }
-    }
-
-    protected List<?> getList(String body, String file, Class<?> aClass) throws IOException {
-        List<?> list;
-        if (StringUtils.isNotEmpty(body)) {
-            JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, aClass);
-            list = objectMapper.readValue(body, listType);
-        } else if (StringUtils.isNotEmpty(file)) {
-            JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, aClass);
-            list = objectMapper.readValue(readFile(file), listType);
-        } else {
-            list = null;
-        }
-        return list;
-    }
-
-    protected List<?> getList(Map<String, String> map, String bodyKey, String fileKey, Class<?> aClass) throws IOException {
-        List<?> list;
-        String findResult = map.get(bodyKey);
-        String findFileResult = map.get(fileKey);
-        return getList(findResult, findFileResult, aClass);
-    }
-
-    protected <T> T getResult(String body, String file, Class<T> aClass) throws IOException {
-        Object result;
-        if (StringUtils.isNotEmpty(body)) {
-            result = objectMapper.readValue(body, aClass);
-        } else if (StringUtils.isNotEmpty(file)) {
-            result = objectMapper.readValue(readFile(file), aClass);
-        } else {
-            result = null;
-        }
-        return (T) result;
-    }
-
-    protected <T> T getResult(Map<String, String> map, String bodyKey, String fileKey, Class<T> aClass) throws IOException {
-        String getResult = map.get(bodyKey);
-        String getFileResult = map.get(fileKey);
-        return getResult(getResult, getFileResult, aClass);
-    }
-
-    protected PanacheMongoRepositoryBase<?, ?> findPanacheMongoRepositoryBaseMock(String serviceClass) throws NoSuchMethodException {
-        for (AbstractEntityRestMongoService<?, ?> service : abstractEntityRestMongoServices) {
-            String name = service.getClass().getName();
-            if (name.matches(serviceClass + ".*")) {
-                return service.getRepository();
-            }
-        }
-        return null;
-    }
-
     /**
-     * Override this method to add extra operation after test
+     * Override this method to add extra operation after test:
+     * default: close kafka memory test and wait 0.1 second to avoid interference with next test.
      *
      * @param testCase
      */
@@ -330,7 +162,7 @@ public abstract class TestCasesEngine {
                     if (mockMessage.clazz().isPresent()) {
                         try {
                             Class<?> aClass = Class.forName(mockMessage.clazz().get(), true, Thread.currentThread().getContextClassLoader());
-                            List list = getList(mockMessage.data().orElse(null), mockMessage.fileData().orElse(null), aClass);
+                            List list = getResultList(mockMessage.data().orElse(null), mockMessage.fileData().orElse(null), aClass);
                             List<? extends Message<String>> received = waitFor(sink, list.size(), testCase.maxWaitingMillisecondForMessages());
                             Assertions.assertEquals(list.size(), received.size());
                             int i = 0;
@@ -407,6 +239,47 @@ public abstract class TestCasesEngine {
         }
     }
 
+    /* Get Result */
+    protected <T> T getResult(Map<String, String> map, String bodyKey, String fileKey, Class<T> aClass) throws IOException {
+        String getResult = map.get(bodyKey);
+        String getFileResult = map.get(fileKey);
+        return getResult(getResult, getFileResult, aClass);
+    }
+
+    protected <T> T getResult(String body, String file, Class<T> aClass) throws IOException {
+        Object result;
+        if (StringUtils.isNotEmpty(body)) {
+            result = objectMapper.readValue(body, aClass);
+        } else if (StringUtils.isNotEmpty(file)) {
+            result = objectMapper.readValue(readFile(file), aClass);
+        } else {
+            result = null;
+        }
+        return (T) result;
+    }
+
+    protected List<?> getResultList(Map<String, String> map, String bodyKey, String fileKey, Class<?> aClass) throws IOException {
+        List<?> list;
+        String findResult = map.get(bodyKey);
+        String findFileResult = map.get(fileKey);
+        return getResultList(findResult, findFileResult, aClass);
+    }
+
+    protected List<?> getResultList(String body, String file, Class<?> aClass) throws IOException {
+        List<?> list;
+        if (StringUtils.isNotEmpty(body)) {
+            JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, aClass);
+            list = objectMapper.readValue(body, listType);
+        } else if (StringUtils.isNotEmpty(file)) {
+            JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, aClass);
+            list = objectMapper.readValue(readFile(file), listType);
+        } else {
+            list = null;
+        }
+        return list;
+    }
+
+    /* Utilities */
     protected void logOp(String operation, String channel, Object result) {
         System.out.println("Direction: " + operation);
         System.out.println("Channel: " + channel);
@@ -530,8 +403,8 @@ public abstract class TestCasesEngine {
     }
 
     protected InputStream readFile(String fileName) {
-        ClassLoader classLoader = this.getClass().getClassLoader();
-        InputStream inputStream = classLoader.getResourceAsStream(fileName);
+        InputStream inputStream = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(fileName);
         if (inputStream == null) {
             inputStream = this.getClass().getResourceAsStream(fileName);
         }

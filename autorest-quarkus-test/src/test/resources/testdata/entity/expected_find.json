@@ -1,0 +1,50 @@
+[
+  {
+    "id": "MTAwMDU1",
+    "insertionUser": null,
+    "lastModifiedUser": null,
+    "insertionDate": null,
+    "lastModifiedDate": null,
+    "eventCode": "100055",
+    "transactionType": "BT",
+    "value": 12.35,
+    "movements": [
+      {
+        "code": "321",
+        "description": "Label 321"
+      },
+      {
+        "code": "654",
+        "description": "Label 654"
+      },
+      {
+        "code": "987",
+        "description": "Label 987"
+      }
+    ]
+  },
+  {
+    "id": "MTAwMDgw",
+    "insertionUser": null,
+    "lastModifiedUser": null,
+    "insertionDate": null,
+    "lastModifiedDate": null,
+    "eventCode": "100080",
+    "transactionType": "SA",
+    "value": 45.67,
+    "movements": [
+      {
+        "code": "123",
+        "description": "Label 123"
+      },
+      {
+        "code": "456",
+        "description": "Label 456"
+      },
+      {
+        "code": "789",
+        "description": "Label 789"
+      }
+    ]
+  }
+]

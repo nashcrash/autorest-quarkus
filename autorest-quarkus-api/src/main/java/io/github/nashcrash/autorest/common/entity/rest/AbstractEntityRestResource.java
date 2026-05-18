@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.jboss.resteasy.reactive.ResponseStatus;
 
 import java.util.List;
 
@@ -74,6 +75,7 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
             responseCode = "201",
             description = "Resource created successfully"
     )
+    @ResponseStatus(201)
     public DTO create(@Valid DTO dto) {
         return service.create(dto);
     }

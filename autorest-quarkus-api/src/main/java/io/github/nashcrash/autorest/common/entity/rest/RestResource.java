@@ -4,6 +4,7 @@ import io.github.nashcrash.autorest.common.entity.FindDTO;
 import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import org.jboss.resteasy.reactive.ResponseStatus;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public interface RestResource<DTO> {
     ResultDTO<DTO> findAndCount(@Valid FindDTO dto);
 
     @POST
+    @ResponseStatus(201)
     DTO create(@Valid DTO dto);
 
     @PUT

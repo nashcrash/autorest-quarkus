@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -16,5 +17,6 @@ import org.bson.codecs.pojo.annotations.BsonId;
 @SuperBuilder(toBuilder = true)
 public abstract class AbstractEntityMongo extends AbstractEntity {
     @BsonId
+    @BsonProperty("_id")
     private String id;
 }
