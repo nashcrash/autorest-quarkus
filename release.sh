@@ -61,6 +61,9 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# --- 5. Ensure test ---
+mvn clean test
+
 # --- 5. GIT OPERATIONS ---
 echo "Committing changes to Git..."
 git add .
@@ -85,7 +88,7 @@ read -p "Do you want to release to the Maven Repository? (y/n): " CONFIRM
 case "$CONFIRM" in
   y|Y)
     echo "Starting Maven release..."
-    mvn deploy -P release -s .settings.xml
+    mvn deploy -P release -DskipTests -s .settings.xml
     ;;
   *)
     echo "Release aborted by user."
