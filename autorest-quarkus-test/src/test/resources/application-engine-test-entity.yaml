@@ -8,7 +8,7 @@ constant:
       expected-find: "testdata/entity/expected_find.json"
       expected-create: "testdata/entity/expected_create.json"
       expected-update: "testdata/entity/expected_get.json"
-      expected-patch: "testdata/entity/expected_get.json"
+      expected-patch: "testdata/entity/expected_patch.json"
 
 entity-test:
   cases:
@@ -44,7 +44,7 @@ entity-test:
       headers: x-custom-username=TEST
       url: ${constant.rootPath}${constant.entity.entity-base-path}
       content-type: application/json
-      file-body: ${constant.entity.test-data.expected-patch}
+      body: '{"id":"MTAwMDU1","eventCode":"100055","value":12.36}'
       expected-status: 200
       expected-file-body: ${constant.entity.test-data.expected-patch}
     - name: delete-${constant.entity.entity-name}-ok

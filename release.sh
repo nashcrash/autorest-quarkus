@@ -64,30 +64,29 @@ fi
 # --- 5. Ensure test ---
 mvn clean test
 
-# --- 5. GIT OPERATIONS ---
-echo "Committing changes to Git..."
-git add .
-
-# If there are other modules (sub-poms), you might want to add them too:
-# git add "**/pom.xml"
-
-git commit -m "build: bump version to $NEW_VERSION"
-
-echo "Creating git tag: v$NEW_VERSION"
-git tag "v$NEW_VERSION"
-
-# --- 6. PUSH ---
-echo "Pushing commit and tags to origin..."
-git push
-git push --tags
-
-# --- 7. DEPLOY ---
+# --- 6. DEPLOY ---
 read -p "Do you want to release to the Maven Repository? (y/n): " CONFIRM
 
 # Normalize input and check confirmation
 case "$CONFIRM" in
   y|Y)
-    echo "Starting Maven release..."
+    # --- 6.2 GIT OPERATIONS ---
+    echo "Committing changes to Git..."
+    git add .
+
+    #Add all data to the commit, including the pom.xml file with the new version
+    git commit -m "build: bump version to $NEW_VERSION"
+
+    echo "Creating git tag: v$NEW_VERSION"
+    git tag "v$NEW_VERSION"
+
+    # --- 6.2 PUSH ---
+    echo "Pushing commit and tags to origin..."
+    git push
+    git push --tags
+
+    # --- 6.3 MAVEN DEPLOY ---
+    echo "Starting Maven Repo release..."
     mvn deploy -P release -DskipTests -s .settings.xml
     ;;
   *)
