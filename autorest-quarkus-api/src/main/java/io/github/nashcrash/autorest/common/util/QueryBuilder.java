@@ -194,6 +194,11 @@ public class QueryBuilder {
         return this;
     }
 
+    public QueryBuilder addSegment(String segment) {
+        conditions.add(new Condition(segment, "segment", null, null));
+        return this;
+    }
+
     public String build() {
         if ("mongo".equalsIgnoreCase(type)) {
             return "{" + build(templateMongo) + "}";
@@ -217,6 +222,10 @@ public class QueryBuilder {
         StringBuilder stringBuilder = new StringBuilder();
         boolean first = true;
         for (Condition condition : conditions) {
+            if ("segment".equals(condition.type)) {
+                stringBuilder.append(condition.field);
+                continue;
+            }
             if (first) {
                 first = false;
             } else {

@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test;
 
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 
 public class QueryBuilderTest {
 
@@ -59,5 +62,20 @@ public class QueryBuilderTest {
                 .andHistoricalReference("start", "end", referenceDate)
                 .build();
         Assertions.assertEquals(expected, query);
+    }
+
+    @Test
+    public void test_SEGMENT() {
+        Instant refTime = Instant.now();
+        QueryBuilder builder = QueryBuilder.getMongoQueryBuilder()
+                .andIn("cause", List.of("0", "1"))  //0 - Accidental, 1 - scheduled without noticece
+                .andEq("originalType", "MT")
+                .andNe("causedByOperation", Boolean.TRUE) //interruptions due to opening of AT/MT transformers and opening of MT/MT transformers should not be considered
+                .andGt("userCountBT", 0) //interruptions of lines that exclusively supply MT users should not be considered
+                .or(
+                        QueryBuilder.getMongoQueryBuilder().andIsNull("endEvent").andLte("startEvent", refTime),
+                        QueryBuilder.getMongoQueryBuilder().andIsNotNull("endEvent").addSegment(", $expr: {$gte: [{$subtract: [\"$endEvent\", \"$startEvent\"]}," + 180000 + "]}")
+                );
+        System.out.println(builder.build());
     }
 }
