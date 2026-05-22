@@ -101,6 +101,7 @@ public abstract class AbstractEntityReactiveMongoService<ENTITY extends Abstract
                                 ).asTuple()
                                 .map(tuple -> mapper.toDto((ENTITY) newEntity));
                     } else {
+                        mapper.patchToEntity(dto, entity);
                         return repository.persistOrUpdate(entity).map(v -> mapper.toDto(entity));
                     }
                 })

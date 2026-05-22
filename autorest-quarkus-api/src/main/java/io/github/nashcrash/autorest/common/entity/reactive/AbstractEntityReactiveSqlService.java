@@ -98,6 +98,7 @@ public abstract class AbstractEntityReactiveSqlService<ENTITY extends AbstractEn
                                 ).asTuple()
                                 .map(tuple -> mapper.toDto((ENTITY) newEntity));
                     } else {
+                        mapper.patchToEntity(dto, entity);
                         return repository.persist(entity).map(v -> mapper.toDto(entity));
                     }
                 })
