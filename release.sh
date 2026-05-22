@@ -96,3 +96,4 @@ case "$CONFIRM" in
 esac
 
 echo "Successfully released version $NEW_VERSION!"
+echo "See version on: https://repo.maven.apache.org/maven2/io/github/nashcrash/autorest/"
