@@ -110,11 +110,11 @@ public abstract class AbstractEntityReactiveSqlService<ENTITY extends AbstractEn
         return repository.deleteById(Long.parseLong(id)).replaceWithVoid();
     }
 
-    public <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+    public <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, List<FieldMap> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
         throw new NotImplementedException();
     }
 
-    public <T> Uni<ResultDTO<T>> aggregateAndCount(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+    public <T> Uni<ResultDTO<T>> aggregateAndCount(List<FieldPair> groupBy, List<FieldMap> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
         throw new NotImplementedException();
     }
 }

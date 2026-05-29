@@ -115,11 +115,11 @@ public abstract class AbstractEntityRestSqlService<ENTITY extends AbstractEntity
         repository.deleteById(Long.parseLong(id));
     }
 
-    public <T> List<T> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+    public <T> List<T> aggregate(List<FieldPair> groupBy, List<FieldMap> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
         throw new NotImplementedException();
     }
 
-    public <T> ResultDTO<T> aggregateAndCount(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+    public <T> ResultDTO<T> aggregateAndCount(List<FieldPair> groupBy, List<FieldMap> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
         throw new NotImplementedException();
     }
 }

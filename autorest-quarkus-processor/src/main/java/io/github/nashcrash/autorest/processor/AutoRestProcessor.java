@@ -7,6 +7,7 @@ import com.squareup.javapoet.TypeName;
 import io.github.nashcrash.autorest.api.*;
 import io.github.nashcrash.autorest.common.entity.AbstractEntityMongo;
 import io.github.nashcrash.autorest.common.entity.AbstractEntitySQL;
+import io.github.nashcrash.autorest.common.entity.FieldMap;
 import io.github.nashcrash.autorest.common.entity.FieldPair;
 import io.github.nashcrash.autorest.processor.dto.AggregateDTO;
 import io.github.nashcrash.autorest.processor.dto.GenericRestApiDTO;
@@ -127,10 +128,10 @@ public class AutoRestProcessor extends AbstractProcessor {
             }
             if (aggregate.aggregateBy() != null) {
                 for (Aggregate.AggregateMapEntry aggregateMapEntry : aggregate.aggregateBy()) {
-                    if (aggregateDTO.getAggregateBy() == null) aggregateDTO.setAggregateBy(new HashMap<>());
-                    aggregateDTO.getAggregateBy().put(
-                            aggregateMapEntry.accumulator(),
-                            FieldPair.builder()
+                    if (aggregateDTO.getAggregateBy() == null) aggregateDTO.setAggregateBy(new ArrayList<>());
+                    aggregateDTO.getAggregateBy().add(
+                            FieldMap.builder()
+                                    .type(aggregateMapEntry.accumulator())
                                     .originalField(aggregateMapEntry.value().originalField())
                                     .targetField(aggregateMapEntry.value().targetField())
                                     .build());

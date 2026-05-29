@@ -2,6 +2,7 @@ package io.github.nashcrash.autorest.processor.generator;
 
 import com.squareup.javapoet.*;
 import io.github.nashcrash.autorest.common.entity.AccumulatorType;
+import io.github.nashcrash.autorest.common.entity.FieldMap;
 import io.github.nashcrash.autorest.common.entity.FieldPair;
 import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import io.github.nashcrash.autorest.processor.AutoRestProcessor;
@@ -159,26 +160,19 @@ public class AutoResourceGenerator {
         return CodeBlock.of("$S", field);
     }
 
-    private CodeBlock generateAccumulatorsBlock(Map<AccumulatorType, FieldPair> aggregateBy) {
+    private CodeBlock generateAccumulatorsBlock(List<FieldMap> aggregateBy) {
         if (aggregateBy == null) {
             return CodeBlock.of("null");
         }
-        ClassName fieldPairTypeClass = ClassName.get("io.github.nashcrash.autorest.common.entity", "FieldPair");
+        ClassName fieldMapTypeClass = ClassName.get("io.github.nashcrash.autorest.common.entity", "FieldMap");
         ClassName accumulatorTypeClass = ClassName.get("io.github.nashcrash.autorest.common.entity", "AccumulatorType");
-        CodeBlock.Builder accumulatorsBuilder = CodeBlock.builder().add("$T.of(", ClassName.get(Map.class));
+        CodeBlock.Builder fieldsBuilder = CodeBlock.builder().add("$T.of(", ClassName.get(List.class));
 
         List<CodeBlock> pieces = new ArrayList<>();
-        for (Map.Entry<AccumulatorType, FieldPair> entry : aggregateBy.entrySet()) {
-
-            pieces.add(CodeBlock.of("$T.$L, $T.of($S, $S)",
-                    accumulatorTypeClass,
-                    entry.getKey().name(),
-                    fieldPairTypeClass,
-                    entry.getValue().getOriginalField(),
-                    entry.getValue().getTargetField()
-            ));
+        for (FieldMap field : aggregateBy) {
+            pieces.add(CodeBlock.of("$T.of($T.$L, $S, $S)", fieldMapTypeClass, accumulatorTypeClass, field.getType().name(), field.getOriginalField(), field.getTargetField()));
         }
-        return accumulatorsBuilder.add(CodeBlock.join(pieces, ", ")).add(")").build();
+        return fieldsBuilder.add(CodeBlock.join(pieces, ", ")).add(")").build();
     }
 
     private CodeBlock generateFieldsBlock(List<FieldPair> groupBy) {

@@ -2,6 +2,7 @@ package io.github.nashcrash.autorest.common.util;
 
 import com.mongodb.client.model.*;
 import io.github.nashcrash.autorest.common.entity.AccumulatorType;
+import io.github.nashcrash.autorest.common.entity.FieldMap;
 import io.github.nashcrash.autorest.common.entity.FieldPair;
 import io.github.nashcrash.autorest.common.entity.FindDTO;
 import io.github.nashcrash.autorest.common.exception.CustomException;
@@ -14,13 +15,12 @@ import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class PipelineUtils {
 
     public static List<Bson> aggregate(
             List<FieldPair> groupBy,
-            Map<AccumulatorType, FieldPair> aggregateBy,
+            List<FieldMap> aggregateBy,
             String elementsKey,
             String unwindFields,
             FindDTO findDTO,
@@ -34,7 +34,9 @@ public class PipelineUtils {
         }
 
         // 2) Sort BEFORE grouping (internal ordering, e.g. day + shift)
-        pipeline.add(Aggregates.sort(getBsonSort(findDTO)));
+        if (StringUtils.isNotEmpty(elementsKey)) {
+            pipeline.add(Aggregates.sort(getBsonSort(findDTO)));
+        }
 
         if (unwindFields != null && !unwindFields.isEmpty()) {
             String fieldPath = unwindFields.startsWith("$") ? unwindFields : "$" + unwindFields;
@@ -56,8 +58,8 @@ public class PipelineUtils {
 
         // Standard accumulators
         if (aggregateBy != null && !aggregateBy.isEmpty()) {
-            for (Map.Entry<AccumulatorType, FieldPair> entry : aggregateBy.entrySet()) {
-                accumulators.add(generateAccumulator(entry.getKey(), entry.getValue()));
+            for (FieldMap entry : aggregateBy) {
+                accumulators.add(generateAccumulator(entry.getType(), entry.getOriginalField(), entry.getTargetField()));
             }
         }
 
@@ -70,9 +72,19 @@ public class PipelineUtils {
 
         pipeline.add(Aggregates.group(groupId, accumulators));
 
+        //Add fields from group id
+        if (groupBy != null && !groupBy.isEmpty()) {
+            List<Field<?>> addFields = new ArrayList<>();
+            for (FieldPair fieldPair : groupBy) {
+                addFields.add(new Field<>(fieldPair.getTargetField(), "$_id." + fieldPair.getOriginalField()));
+            }
+            pipeline.add(Aggregates.addFields(addFields));
+        }
+
         // 4) Facet: paginated data + total count
         List<Bson> dataPipeline = new ArrayList<>();
 
+        dataPipeline.add(Aggregates.sort(getBsonSort(findDTO)));
         dataPipeline.add(Aggregates.skip(findDTO.getPage() * findDTO.getLimit()));
         dataPipeline.add(Aggregates.limit(findDTO.getLimit()));
 
@@ -92,7 +104,7 @@ public class PipelineUtils {
         }
 
         if (aggregateBy != null) {
-            for (FieldPair fieldPair : aggregateBy.values()) {
+            for (FieldMap fieldPair : aggregateBy) {
                 projections.add(Projections.include(fieldPair.getTargetField()));
             }
         }
@@ -106,7 +118,10 @@ public class PipelineUtils {
         );
 
         if (!withCount) {
-            return dataPipeline;
+            pipeline.add(Aggregates.sort(getBsonSort(findDTO)));
+            pipeline.add(Aggregates.skip(findDTO.getPage() * findDTO.getLimit()));
+            pipeline.add(Aggregates.limit(findDTO.getLimit()));
+            return pipeline;
         }
         //Make final object
 
@@ -124,9 +139,8 @@ public class PipelineUtils {
         return pipeline;
     }
 
-    private static BsonField generateAccumulator(AccumulatorType key, FieldPair value) {
-        String fieldReference = "$" + value.getOriginalField();
-        String targetField = value.getTargetField();
+    private static BsonField generateAccumulator(AccumulatorType key, String originalField, String targetField) {
+        String fieldReference = "$" + originalField;
         return switch (key) {
             case FIRST -> Accumulators.first(targetField, fieldReference);
             case LAST -> Accumulators.last(targetField, fieldReference);
@@ -135,7 +149,8 @@ public class PipelineUtils {
             case MIN -> Accumulators.min(targetField, fieldReference);
             case MAX -> Accumulators.max(targetField, fieldReference);
             case COUNT -> Accumulators.sum(targetField, 1);
-            case PROJECTION -> throw new IllegalArgumentException("Accumulator type PROJECTION is used only without grouping");
+            case PROJECTION ->
+                    throw new IllegalArgumentException("Accumulator type PROJECTION is used only without grouping");
             case null -> throw new IllegalArgumentException("Accumulator type cannot be null");
         };
     }

@@ -2,6 +2,7 @@ package io.github.nashcrash.autorest.processor.dto;
 
 import com.squareup.javapoet.TypeName;
 import io.github.nashcrash.autorest.common.entity.AccumulatorType;
+import io.github.nashcrash.autorest.common.entity.FieldMap;
 import io.github.nashcrash.autorest.common.entity.FieldPair;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,7 +23,7 @@ public class AggregateDTO {
     private TypeElement dtoTypeElement;
     private TypeName dtoTypeName;
     private List<FieldPair> groupBy;
-    private Map<AccumulatorType, FieldPair> aggregateBy;
+    private List<FieldMap> aggregateBy;
     private String elementsField;
     private String unwindField;
 }

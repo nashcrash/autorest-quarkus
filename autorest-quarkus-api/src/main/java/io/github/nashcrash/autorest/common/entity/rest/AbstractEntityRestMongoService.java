@@ -1,5 +1,6 @@
 package io.github.nashcrash.autorest.common.entity.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.AggregateIterable;
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
@@ -25,6 +26,9 @@ import java.util.Map;
 public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityRestService<ENTITY, DTO> {
     public static final String EM_ENTITY_ALREADY_HISTORIZED_WITH_ID = "Entity already historized with id: ";
     public static final String EM_ENTITY_NOT_FOUND_WITH_ID = "Entity not found with id: ";
+
+    @Inject
+    ObjectMapper objectMapper;
 
     @Inject
     @Getter
@@ -103,7 +107,7 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
             repository.persist((ENTITY) newEntity);
             entity = (ENTITY) newEntity;
         } else {
-            mapper.patchToEntity(dto,entity);
+            mapper.patchToEntity(dto, entity);
             repository.persist(entity);
         }
         return mapper.toDto(entity);
@@ -113,20 +117,18 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
         repository.deleteById(id);
     }
 
-    public <T> List<T> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+    public <T> List<T> aggregate(List<FieldPair> groupBy, List<FieldMap> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
         List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, elementField, unwindFields, findDTO, false);
         return this.repository.mongoCollection().aggregate(pipeline, clazz).into(new ArrayList<>());
     }
 
-    public <T> ResultDTO<T> aggregateAndCount(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+    public <T> ResultDTO<T> aggregateAndCount(List<FieldPair> groupBy, List<FieldMap> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
         List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, elementField, unwindFields, findDTO, true);
-        AggregateIterable<Document> result =  this.repository.mongoCollection().aggregate(pipeline, Document.class);
+        AggregateIterable<Document> result = this.repository.mongoCollection().aggregate(pipeline, Document.class);
         Document facetResult = result.first();
-        List<T> elements = facetResult.getList("data", clazz, List.of());
-
-        List<Document> metadataDocs =
-                facetResult.getList("metadata", Document.class, List.of());
-
+        List<Document> data = facetResult.getList("data", Document.class, List.of());
+        List<T> elements = data.stream().map(document -> objectMapper.convertValue(document, clazz)).toList();
+        List<Document> metadataDocs = facetResult.getList("metadata", Document.class, List.of());
         long totalCount = metadataDocs.isEmpty() ? 0L : metadataDocs.getFirst().getLong("totalCount");
         return new ResultDTO<T>(elements, totalCount, findDTO.getPage(), findDTO.getLimit());
     }
