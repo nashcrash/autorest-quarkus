@@ -28,7 +28,8 @@ import java.util.List;
         groupBy = {
                 @Aggregate.AggregateFieldPair(originalField = "transactionType", targetField = "transactionType"),
                 @Aggregate.AggregateFieldPair(originalField = "value", targetField = "value")
-        }
+        },
+        elements = @Aggregate.AggregateElementField(targetField = "entities")
 )
 @Aggregate(
         name = "byTransactionTypeSum",

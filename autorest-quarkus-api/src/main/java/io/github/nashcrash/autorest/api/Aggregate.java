@@ -23,6 +23,10 @@ public @interface Aggregate {
         String targetField();
     }
 
+    @interface AggregateElementField {
+        String targetField();
+    }
+
     @interface AggregateUnwindField {
         String originalField();
     }
@@ -35,5 +39,6 @@ public @interface Aggregate {
 
     AggregateFieldPair[] groupBy() default {};
     AggregateMapEntry[] aggregateBy() default {};
+    AggregateElementField elements() default @AggregateElementField(targetField = "");
     AggregateUnwindField unwind() default @AggregateUnwindField(originalField = "");
 }

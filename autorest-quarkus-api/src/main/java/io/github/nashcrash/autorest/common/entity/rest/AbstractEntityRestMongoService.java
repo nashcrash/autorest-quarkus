@@ -1,5 +1,6 @@
 package io.github.nashcrash.autorest.common.entity.rest;
 
+import com.mongodb.client.AggregateIterable;
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.time.Instant;
@@ -111,8 +113,21 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
         repository.deleteById(id);
     }
 
-    public <T> List<T> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String unwindFields, FindDTO findDTO, Class<T> clazz) {
-        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, unwindFields, findDTO);
+    public <T> List<T> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, elementField, unwindFields, findDTO, false);
         return this.repository.mongoCollection().aggregate(pipeline, clazz).into(new ArrayList<>());
+    }
+
+    public <T> ResultDTO<T> aggregateAndCount(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, elementField, unwindFields, findDTO, true);
+        AggregateIterable<Document> result =  this.repository.mongoCollection().aggregate(pipeline, Document.class);
+        Document facetResult = result.first();
+        List<T> elements = facetResult.getList("data", clazz, List.of());
+
+        List<Document> metadataDocs =
+                facetResult.getList("metadata", Document.class, List.of());
+
+        long totalCount = metadataDocs.isEmpty() ? 0L : metadataDocs.getFirst().getLong("totalCount");
+        return new ResultDTO<T>(elements, totalCount, findDTO.getPage(), findDTO.getLimit());
     }
 }

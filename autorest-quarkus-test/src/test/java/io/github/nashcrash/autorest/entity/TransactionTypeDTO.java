@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,4 +18,5 @@ import lombok.experimental.SuperBuilder;
 public class TransactionTypeDTO {
     private String transactionType;
     private Double value;
+    private List<EntityDTO> entities;
 }

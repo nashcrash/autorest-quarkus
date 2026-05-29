@@ -3,6 +3,7 @@ package io.github.nashcrash.autorest.processor.generator;
 import com.squareup.javapoet.*;
 import io.github.nashcrash.autorest.common.entity.AccumulatorType;
 import io.github.nashcrash.autorest.common.entity.FieldPair;
+import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import io.github.nashcrash.autorest.processor.AutoRestProcessor;
 import io.github.nashcrash.autorest.processor.dto.AggregateDTO;
 import io.github.nashcrash.autorest.processor.dto.GenericRestApiDTO;
@@ -53,6 +54,7 @@ public class AutoResourceGenerator {
             for (AggregateDTO aggregateDTO : genericRestApiDTO.getAggregate()) {
                 resourceClass.addMethod(generateAggregateGet(genericRestApiDTO, aggregateDTO));
                 resourceClass.addMethod(generateAggregatePost(genericRestApiDTO, aggregateDTO));
+                resourceClass.addMethod(generateAggregateAndCountPost(genericRestApiDTO, aggregateDTO));
             }
         }
 
@@ -80,12 +82,14 @@ public class AutoResourceGenerator {
                 .addStatement("return service.aggregate(\n" +
                                 "    $L,\n" + // fieldsBlock
                                 "    $L,\n" + // accumulatorsBlock
+                                "    $L,\n" + // elementField
                                 "    $L,\n" + // unwindFields
                                 "    $T.builder().query(query).orderBy(orderBy).orderDirection(orderDirection).page(page).limit(limit).build(),\n" +
                                 "    $T.class)",
                         generateFieldsBlock(aggregateDTO.getGroupBy()),
                         generateAccumulatorsBlock(aggregateDTO.getAggregateBy()),
-                        generateUnwindFieldsBlock(aggregateDTO.getUnwindField()),
+                        generateSimpleFieldsBlock(aggregateDTO.getElementsField()),
+                        generateSimpleFieldsBlock(aggregateDTO.getUnwindField()),
                         ClassName.get("io.github.nashcrash.autorest.common.entity", "FindDTO"),
                         aggregateDTO.getDtoTypeName()
                 )
@@ -107,22 +111,52 @@ public class AutoResourceGenerator {
                 .addStatement("return service.aggregate(\n" +
                                 "    $L,\n" + // fieldsBlock
                                 "    $L,\n" + // accumulatorsBlock
+                                "    $L,\n" + // elementField
                                 "    $L,\n" + // unwindFields
                                 "    findDto,\n" +
                                 "    $T.class)",
                         generateFieldsBlock(aggregateDTO.getGroupBy()),
                         generateAccumulatorsBlock(aggregateDTO.getAggregateBy()),
-                        generateUnwindFieldsBlock(aggregateDTO.getUnwindField()),
+                        generateSimpleFieldsBlock(aggregateDTO.getElementsField()),
+                        generateSimpleFieldsBlock(aggregateDTO.getUnwindField()),
                         aggregateDTO.getDtoTypeName()
                 )
                 .build();
     }
 
-    private CodeBlock generateUnwindFieldsBlock(String unwindField) {
-        if (unwindField == null || unwindField.trim().isEmpty()) {
+    private MethodSpec generateAggregateAndCountPost(GenericRestApiDTO genericRestApiDTO, AggregateDTO aggregateDTO) {
+        TypeName returnType = genericRestApiDTO.isReactive() ?
+                wrapToUni(ParameterizedTypeName.get(ClassName.get(ResultDTO.class), aggregateDTO.getDtoTypeName())) :
+                ParameterizedTypeName.get(ClassName.get(ResultDTO.class), aggregateDTO.getDtoTypeName());
+        return MethodSpec.methodBuilder(checkMethodName(aggregateDTO.getName()+"AndCount", "aggregateAndCount") + "Post")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(ClassName.get("jakarta.ws.rs", "POST"))
+                .addAnnotation(AnnotationSpec.builder(Path.class).addMember("value", "$S", aggregateDTO.getPath()+"AndCount").build())
+                .addAnnotation(AnnotationSpec.builder(Operation.class)
+                        .addMember("summary", "$S", "Aggregate and count by " + aggregateDTO.getDtoTypeElement().getSimpleName() + " with filtering and pagination").build())
+                .addParameter(ParameterSpec.builder(ClassName.get("io.github.nashcrash.autorest.common.entity", "FindDTO"), "findDto").build())
+                .returns(returnType)
+                .addStatement("return service.aggregateAndCount(\n" +
+                                "    $L,\n" + // fieldsBlock
+                                "    $L,\n" + // accumulatorsBlock
+                                "    $L,\n" + // elementField
+                                "    $L,\n" + // unwindFields
+                                "    findDto,\n" +
+                                "    $T.class)",
+                        generateFieldsBlock(aggregateDTO.getGroupBy()),
+                        generateAccumulatorsBlock(aggregateDTO.getAggregateBy()),
+                        generateSimpleFieldsBlock(aggregateDTO.getElementsField()),
+                        generateSimpleFieldsBlock(aggregateDTO.getUnwindField()),
+                        aggregateDTO.getDtoTypeName()
+                )
+                .build();
+    }
+
+    private CodeBlock generateSimpleFieldsBlock(String field) {
+        if (field == null || field.trim().isEmpty()) {
             return CodeBlock.of("null");
         }
-        return CodeBlock.of("$S", unwindField);
+        return CodeBlock.of("$S", field);
     }
 
     private CodeBlock generateAccumulatorsBlock(Map<AccumulatorType, FieldPair> aggregateBy) {

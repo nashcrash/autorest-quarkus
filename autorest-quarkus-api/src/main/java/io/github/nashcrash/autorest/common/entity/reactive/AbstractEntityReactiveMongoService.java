@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.time.Instant;
@@ -113,8 +114,35 @@ public abstract class AbstractEntityReactiveMongoService<ENTITY extends Abstract
         return repository.deleteById(id).replaceWithVoid();
     }
 
-    public <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String unwindFields, FindDTO findDTO, Class<T> clazz) {
-        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, unwindFields, findDTO);
+    public <T> Uni<List<T>> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, elementField, unwindFields, findDTO, false);
         return this.repository.mongoCollection().aggregate(pipeline, clazz).collect().asList();
+    }
+
+    public <T> Uni<ResultDTO<T>> aggregateAndCount(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+        List<Bson> pipeline = PipelineUtils.aggregate(groupBy, aggregateBy, elementField, unwindFields, findDTO, true);
+        return this.repository.mongoCollection().aggregate(pipeline, Document.class)
+                .toUni()
+                .map(facetResult -> {
+                    // Extract paginated data
+                    List<T> elements =
+                            facetResult.getList("data", clazz, List.of());
+
+                    // Extract metadata
+                    List<Document> metadataDocs =
+                            facetResult.getList("metadata", Document.class, List.of());
+
+                    long totalCount = metadataDocs.isEmpty()
+                            ? 0L
+                            : metadataDocs.getFirst().getLong("totalCount");
+
+                    // Build result DTO
+                    return new ResultDTO<>(
+                            elements,
+                            totalCount,
+                            findDTO.getPage(),
+                            findDTO.getLimit()
+                    );
+                });
     }
 }

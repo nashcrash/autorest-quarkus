@@ -13,62 +13,113 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class PipelineUtils {
 
-    public static List<Bson> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String unwindFields, FindDTO findDTO) {
+    public static List<Bson> aggregate(
+            List<FieldPair> groupBy,
+            Map<AccumulatorType, FieldPair> aggregateBy,
+            String elementsKey,
+            String unwindFields,
+            FindDTO findDTO,
+            boolean withCount
+    ) {
         List<Bson> pipeline = new ArrayList<>();
 
+        // 1) Match stage (date range or generic filter)
         if (StringUtils.isNotEmpty(findDTO.getQuery())) {
-            BsonDocument query = BsonDocument.parse(findDTO.getQuery());
-            pipeline.add(Aggregates.match(query)); //Add filter
+            pipeline.add(Aggregates.match(BsonDocument.parse(findDTO.getQuery())));
         }
+
+        // 2) Sort BEFORE grouping (internal ordering, e.g. day + shift)
+        pipeline.add(Aggregates.sort(getBsonSort(findDTO)));
 
         if (unwindFields != null && !unwindFields.isEmpty()) {
             String fieldPath = unwindFields.startsWith("$") ? unwindFields : "$" + unwindFields;
             pipeline.add(Aggregates.unwind(fieldPath));
         }
 
-        List<Bson> projections = new ArrayList<>();
-        projections.add(Projections.excludeId());
+        // 3) Group stage
+        Document groupId = new Document();
+        List<BsonField> accumulators = new ArrayList<>();
+
         if (groupBy != null && !groupBy.isEmpty()) {
-
-            projections.add(Projections.excludeId());
-            Document groupKey = new Document();
             for (FieldPair fieldPair : groupBy) {
-                groupKey.append(fieldPair.getTargetField(), "$" + fieldPair.getOriginalField());
-                projections.add(Projections.computed(fieldPair.getTargetField(), "$_id." + fieldPair.getTargetField()));
-            }
-
-            if (aggregateBy != null && !aggregateBy.isEmpty()) {
-                List<BsonField> fieldAccumulators = new ArrayList<>();
-                for (Map.Entry<AccumulatorType, FieldPair> entry : aggregateBy.entrySet()) {
-                    fieldAccumulators.add(generateAccumulator(entry.getKey(), entry.getValue()));
-                    projections.add(Projections.include(entry.getValue().getTargetField()));
-                }
-                pipeline.add(Aggregates.group(groupKey, fieldAccumulators)); //Add aggregation
-            } else {
-                pipeline.add(Aggregates.group(groupKey)); //Add aggregation
-            }
-        } else if (aggregateBy != null) {
-            FieldPair fieldPair = aggregateBy.get(AccumulatorType.PROJECTION);
-            if (fieldPair != null && fieldPair.getTargetField() != null) {
-                Arrays.stream(fieldPair.getTargetField().split(","))
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .forEach(s -> projections.add(Projections.include(s)));
-            } else {
-                throw new IllegalArgumentException("For aggregation without grouping, a projection field pair with target field must be provided");
+                groupId.append(
+                        fieldPair.getTargetField(),
+                        "$" + fieldPair.getOriginalField()
+                );
             }
         }
 
-        pipeline.add(Aggregates.project(Projections.fields(projections))); //Add projection
-        pipeline.add(Aggregates.sort(getBsonSort(findDTO)));
-        pipeline.add(Aggregates.skip(findDTO.getPage() * findDTO.getLimit()));
-        pipeline.add(Aggregates.limit(findDTO.getLimit()));
+        // Standard accumulators
+        if (aggregateBy != null && !aggregateBy.isEmpty()) {
+            for (Map.Entry<AccumulatorType, FieldPair> entry : aggregateBy.entrySet()) {
+                accumulators.add(generateAccumulator(entry.getKey(), entry.getValue()));
+            }
+        }
+
+        // Optional elements array: elements: { $push: "$$ROOT" }
+        if (StringUtils.isNotEmpty(elementsKey)) {
+            accumulators.add(
+                    Accumulators.push(elementsKey, "$$ROOT")
+            );
+        }
+
+        pipeline.add(Aggregates.group(groupId, accumulators));
+
+        // 4) Facet: paginated data + total count
+        List<Bson> dataPipeline = new ArrayList<>();
+
+        dataPipeline.add(Aggregates.skip(findDTO.getPage() * findDTO.getLimit()));
+        dataPipeline.add(Aggregates.limit(findDTO.getLimit()));
+
+        // Projection: include group fields + accumulator fields
+        List<Bson> projections = new ArrayList<>();
+        projections.add(Projections.excludeId());
+
+        if (groupBy != null) {
+            for (FieldPair fieldPair : groupBy) {
+                projections.add(
+                        Projections.computed(
+                                fieldPair.getTargetField(),
+                                "$_id." + fieldPair.getTargetField()
+                        )
+                );
+            }
+        }
+
+        if (aggregateBy != null) {
+            for (FieldPair fieldPair : aggregateBy.values()) {
+                projections.add(Projections.include(fieldPair.getTargetField()));
+            }
+        }
+
+        if (StringUtils.isNotEmpty(elementsKey)) {
+            projections.add(Projections.include(elementsKey));
+        }
+
+        dataPipeline.add(
+                Aggregates.project(Projections.fields(projections))
+        );
+
+        if (!withCount) {
+            return dataPipeline;
+        }
+        //Make final object
+
+        List<Bson> metadataPipeline = List.of(
+                Aggregates.count("totalCount")
+        );
+
+        pipeline.add(
+                Aggregates.facet(
+                        new Facet("data", dataPipeline),
+                        new Facet("metadata", metadataPipeline)
+                )
+        );
 
         return pipeline;
     }

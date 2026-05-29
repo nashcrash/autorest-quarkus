@@ -136,6 +136,9 @@ public class AutoRestProcessor extends AbstractProcessor {
                                     .build());
                 }
             }
+            if (aggregate.elements() != null && !aggregate.elements().targetField().isBlank()) {
+                aggregateDTO.setElementsField(aggregate.elements().targetField());
+            }
             if (aggregate.unwind() != null && !aggregate.unwind().originalField().isBlank()) {
                 aggregateDTO.setUnwindField(aggregate.unwind().originalField());
             }

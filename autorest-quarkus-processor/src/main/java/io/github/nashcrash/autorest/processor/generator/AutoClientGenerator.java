@@ -3,10 +3,14 @@ package io.github.nashcrash.autorest.processor.generator;
 import com.squareup.javapoet.*;
 import io.github.nashcrash.autorest.common.client.CustomClientExceptionMapper;
 import io.github.nashcrash.autorest.common.client.CustomClientHeaderFactory;
+import io.github.nashcrash.autorest.common.entity.ResultDTO;
 import io.github.nashcrash.autorest.processor.AutoRestProcessor;
+import io.github.nashcrash.autorest.processor.dto.AggregateDTO;
 import io.github.nashcrash.autorest.processor.dto.GenericRestApiDTO;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
+import org.eclipse.microprofile.openapi.annotations.Operation;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
@@ -42,6 +46,15 @@ public class AutoClientGenerator {
                 .addAnnotation(ClassName.get("jakarta.enterprise.context", "ApplicationScoped"))
                 .addMethods(overrideMethods(superClass, dtoType));
 
+        // 3. Add aggregate methods
+        if (genericRestApiDTO.getAggregate() != null) {
+            for (AggregateDTO aggregateDTO : genericRestApiDTO.getAggregate()) {
+                mapperInterface.addMethod(generateAggregateGet(genericRestApiDTO, aggregateDTO));
+                mapperInterface.addMethod(generateAggregatePost(genericRestApiDTO, aggregateDTO));
+                mapperInterface.addMethod(generateAggregateAndCountPost(genericRestApiDTO, aggregateDTO));
+            }
+        }
+
         return JavaFile.builder(genericRestApiDTO.getPackageName(), mapperInterface.build())
                 .addFileComment(AutoRestProcessor.AUTO_GENERATED)
                 .build();
@@ -52,7 +65,8 @@ public class AutoClientGenerator {
 
         for (ExecutableElement method : javax.lang.model.util.ElementFilter.methodsIn(baseInterface.getEnclosedElements())) {
             MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(method.getSimpleName().toString())
-                    .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT);
+                    .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                    ;
 
             for (AnnotationMirror ann : method.getAnnotationMirrors()) {
                 methodBuilder.addAnnotation(AnnotationSpec.get(ann));
@@ -97,5 +111,143 @@ public class AutoClientGenerator {
             return com.squareup.javapoet.ArrayTypeName.of(replaceType(aType.componentType, concrete));
         }
         return type;
+    }
+
+    private MethodSpec generateAggregateGet(GenericRestApiDTO genericRestApiDTO, AggregateDTO aggregateDTO) {
+        TypeName returnType = genericRestApiDTO.isReactive()
+                ? wrapToUni(ParameterizedTypeName.get(
+                ClassName.get(List.class),
+                aggregateDTO.getDtoTypeName()))
+                : ParameterizedTypeName.get(
+                ClassName.get(List.class),
+                aggregateDTO.getDtoTypeName());
+
+        return MethodSpec.methodBuilder(checkMethodName(aggregateDTO.getName(), "aggregate") + "Get")
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .addAnnotation(ClassName.get("jakarta.ws.rs", "GET"))
+                .addAnnotation(AnnotationSpec.builder(Path.class)
+                        .addMember("value", "$S", aggregateDTO.getPath())
+                        .build())
+                .addAnnotation(AnnotationSpec.builder(Operation.class)
+                        .addMember(
+                                "summary",
+                                "$S",
+                                "Aggregate by " + aggregateDTO.getDtoTypeElement().getSimpleName()
+                                        + " with filtering and pagination")
+                        .build())
+                .addParameter(ParameterSpec.builder(String.class, "query")
+                        .addAnnotation(AnnotationSpec.builder(QueryParam.class)
+                                .addMember("value", "$S", "query")
+                                .build())
+                        .build())
+                .addParameter(ParameterSpec.builder(String[].class, "orderBy")
+                        .addAnnotation(AnnotationSpec.builder(QueryParam.class)
+                                .addMember("value", "$S", "orderBy")
+                                .build())
+                        .build())
+                .addParameter(ParameterSpec.builder(String[].class, "orderDirection")
+                        .addAnnotation(AnnotationSpec.builder(QueryParam.class)
+                                .addMember("value", "$S", "orderDirection")
+                                .build())
+                        .build())
+                .addParameter(ParameterSpec.builder(int.class, "page")
+                        .addAnnotation(AnnotationSpec.builder(QueryParam.class)
+                                .addMember("value", "$S", "page")
+                                .build())
+                        .build())
+                .addParameter(ParameterSpec.builder(int.class, "limit")
+                        .addAnnotation(AnnotationSpec.builder(QueryParam.class)
+                                .addMember("value", "$S", "limit")
+                                .build())
+                        .build())
+                .returns(returnType)
+                // Interface method: no implementation
+                .build();
+    }
+
+    private MethodSpec generateAggregatePost(GenericRestApiDTO genericRestApiDTO, AggregateDTO aggregateDTO) {
+        TypeName returnType = genericRestApiDTO.isReactive()
+                ? wrapToUni(ParameterizedTypeName.get(
+                ClassName.get(List.class),
+                aggregateDTO.getDtoTypeName()))
+                : ParameterizedTypeName.get(
+                ClassName.get(List.class),
+                aggregateDTO.getDtoTypeName());
+
+        return MethodSpec.methodBuilder(checkMethodName(aggregateDTO.getName(), "aggregate") + "Post")
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .addAnnotation(ClassName.get("jakarta.ws.rs", "POST"))
+                .addAnnotation(AnnotationSpec.builder(Path.class)
+                        .addMember("value", "$S", aggregateDTO.getPath())
+                        .build())
+                .addAnnotation(AnnotationSpec.builder(Operation.class)
+                        .addMember(
+                                "summary",
+                                "$S",
+                                "Aggregate by " + aggregateDTO.getDtoTypeElement().getSimpleName()
+                                        + " with filtering and pagination")
+                        .build())
+                .addParameter(ParameterSpec.builder(
+                                ClassName.get("io.github.nashcrash.autorest.common.entity", "FindDTO"),
+                                "findDto")
+                        .build())
+                .returns(returnType)
+                // Interface method: no implementation
+                .build();
+    }
+
+    private MethodSpec generateAggregateAndCountPost(GenericRestApiDTO genericRestApiDTO,
+                                                     AggregateDTO aggregateDTO) {
+
+        TypeName returnType = genericRestApiDTO.isReactive()
+                ? wrapToUni(ParameterizedTypeName.get(
+                ClassName.get(ResultDTO.class),
+                aggregateDTO.getDtoTypeName()))
+                : ParameterizedTypeName.get(
+                ClassName.get(ResultDTO.class),
+                aggregateDTO.getDtoTypeName());
+
+        return MethodSpec.methodBuilder(
+                        checkMethodName(
+                                aggregateDTO.getName() + "AndCount",
+                                "aggregateAndCount") + "Post")
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .addAnnotation(ClassName.get("jakarta.ws.rs", "POST"))
+                .addAnnotation(AnnotationSpec.builder(Path.class)
+                        .addMember("value", "$S", aggregateDTO.getPath() + "AndCount")
+                        .build())
+                .addAnnotation(AnnotationSpec.builder(Operation.class)
+                        .addMember(
+                                "summary",
+                                "$S",
+                                "Aggregate and count by "
+                                        + aggregateDTO.getDtoTypeElement().getSimpleName()
+                                        + " with filtering and pagination")
+                        .build())
+                .addParameter(ParameterSpec.builder(
+                                ClassName.get(
+                                        "io.github.nashcrash.autorest.common.entity",
+                                        "FindDTO"),
+                                "findDto")
+                        .build())
+                .returns(returnType)
+                // Interface method: signature only, no implementation
+                .build();
+    }
+
+    public String checkMethodName(String name, String defaultName) {
+        if (name == null) return defaultName;
+        name = name.replaceAll("[^a-zA-Z0-9]", "");
+        return name.isEmpty() ? defaultName : name;
+    }
+
+    /**
+     * Avvolge un TypeName esistente in un io.smallrye.mutiny.Uni.
+     * Esempio: String -> Uni<String>
+     */
+    public TypeName wrapToUni(TypeName typeToWrap) {
+        ClassName uniRaw = ClassName.get("io.smallrye.mutiny", "Uni");
+        TypeName boxedType = typeToWrap.isPrimitive() ? typeToWrap.box() : typeToWrap;
+        return ParameterizedTypeName.get(uniRaw, boxedType);
     }
 }

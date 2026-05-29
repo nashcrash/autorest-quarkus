@@ -5,6 +5,7 @@ import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
@@ -114,7 +115,11 @@ public abstract class AbstractEntityRestSqlService<ENTITY extends AbstractEntity
         repository.deleteById(Long.parseLong(id));
     }
 
-    public <T> List<T> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, FindDTO findDTO, Class<T> clazz) {
+    public <T> List<T> aggregate(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
+        throw new NotImplementedException();
+    }
+
+    public <T> ResultDTO<T> aggregateAndCount(List<FieldPair> groupBy, Map<AccumulatorType, FieldPair> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {
         throw new NotImplementedException();
     }
 }
