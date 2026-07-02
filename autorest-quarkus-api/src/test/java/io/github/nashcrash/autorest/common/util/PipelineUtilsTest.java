@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class PipelineUtilsTest {
     @Test
     public void test_Aggregate() {
-        String expectedResult="[{\"$group\": {\"_id\": {\"day\": \"$day\"}, \"highThreshold\": {\"$max\": \"$highThreshold\"}, \"lowThreshold\": {\"$max\": \"$lowThreshold\"}, \"disturbedState\": {\"$max\": \"$disturbedState\"}, \"totalDailyEvents\": {\"$max\": \"$totalDailyEvents\"}, \"timeWindow\": {\"$max\": \"$timeWindow\"}, \"timeZone\": {\"$max\": \"$timeZone\"}}}, {\"$addFields\": {\"day\": \"$_id.day\"}}, {\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$skip\": 0}, {\"$limit\": 100}]";
+        String expectedResult="[{\"$group\": {\"_id\": {\"day\": \"$day\"}, \"highThreshold\": {\"$max\": \"$highThreshold\"}, \"lowThreshold\": {\"$max\": \"$lowThreshold\"}, \"disturbedState\": {\"$max\": \"$disturbedState\"}, \"totalDailyEvents\": {\"$max\": \"$totalDailyEvents\"}, \"timeWindow\": {\"$max\": \"$timeWindow\"}, \"timeZone\": {\"$max\": \"$timeZone\"}}}, {\"$addFields\": {\"day\": \"$_id.day\"}}, {\"$project\": {\"_id\": 0}}, {\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$skip\": 0}, {\"$limit\": 100}]";
         List<Bson> aggregate = PipelineUtils.aggregate(
                 List.of(FieldPair.of("day", "day")),
                 List.of(
@@ -33,12 +33,12 @@ public class PipelineUtilsTest {
                         .build(),
                 false);
 
-        Assertions.assertEquals(expectedResult, toJson(aggregate));
+        Assertions.assertEquals(expectedResult, PipelineUtils.toJson(aggregate));
     }
 
     @Test
     public void test_AggregateAndCount() {
-        String expectedResult="[{\"$group\": {\"_id\": {\"day\": \"$day\"}, \"highThreshold\": {\"$max\": \"$highThreshold\"}, \"lowThreshold\": {\"$max\": \"$lowThreshold\"}, \"disturbedState\": {\"$max\": \"$disturbedState\"}, \"totalDailyEvents\": {\"$max\": \"$totalDailyEvents\"}, \"timeWindow\": {\"$max\": \"$timeWindow\"}, \"timeZone\": {\"$max\": \"$timeZone\"}}}, {\"$addFields\": {\"day\": \"$_id.day\"}}, {\"$facet\": {\"data\": [{\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$skip\": 0}, {\"$limit\": 100}, {\"$project\": {\"_id\": 0, \"day\": \"$_id.day\", \"highThreshold\": 1, \"lowThreshold\": 1, \"disturbedState\": 1, \"totalDailyEvents\": 1, \"timeWindow\": 1, \"timeZone\": 1}}], \"metadata\": [{\"$count\": \"totalCount\"}]}}]";
+        String expectedResult="[{\"$group\": {\"_id\": {\"day\": \"$day\"}, \"highThreshold\": {\"$max\": \"$highThreshold\"}, \"lowThreshold\": {\"$max\": \"$lowThreshold\"}, \"disturbedState\": {\"$max\": \"$disturbedState\"}, \"totalDailyEvents\": {\"$max\": \"$totalDailyEvents\"}, \"timeWindow\": {\"$max\": \"$timeWindow\"}, \"timeZone\": {\"$max\": \"$timeZone\"}}}, {\"$addFields\": {\"day\": \"$_id.day\"}}, {\"$project\": {\"_id\": 0}}, {\"$facet\": {\"data\": [{\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$skip\": 0}, {\"$limit\": 100}, {\"$project\": {\"_id\": 0, \"day\": \"$_id.day\", \"highThreshold\": 1, \"lowThreshold\": 1, \"disturbedState\": 1, \"totalDailyEvents\": 1, \"timeWindow\": 1, \"timeZone\": 1}}], \"metadata\": [{\"$count\": \"totalCount\"}]}}]";
         List<Bson> aggregate = PipelineUtils.aggregate(
                 List.of(FieldPair.of("day", "day")),
                 List.of(
@@ -57,12 +57,12 @@ public class PipelineUtilsTest {
                         .build(),
                 true);
 
-        Assertions.assertEquals(expectedResult, toJson(aggregate));
+        Assertions.assertEquals(expectedResult, PipelineUtils.toJson(aggregate));
     }
 
     @Test
     public void test_Aggregate_withElementKey() {
-        String expectedResult="[{\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$group\": {\"_id\": {\"day\": \"$day\"}, \"highThreshold\": {\"$max\": \"$highThreshold\"}, \"lowThreshold\": {\"$max\": \"$lowThreshold\"}, \"disturbedState\": {\"$max\": \"$disturbedState\"}, \"totalDailyEvents\": {\"$max\": \"$totalDailyEvents\"}, \"timeWindow\": {\"$max\": \"$timeWindow\"}, \"timeZone\": {\"$max\": \"$timeZone\"}, \"intervals\": {\"$push\": \"$$ROOT\"}}}, {\"$addFields\": {\"day\": \"$_id.day\"}}, {\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$skip\": 0}, {\"$limit\": 100}]";
+        String expectedResult="[{\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$group\": {\"_id\": {\"day\": \"$day\"}, \"highThreshold\": {\"$max\": \"$highThreshold\"}, \"lowThreshold\": {\"$max\": \"$lowThreshold\"}, \"disturbedState\": {\"$max\": \"$disturbedState\"}, \"totalDailyEvents\": {\"$max\": \"$totalDailyEvents\"}, \"timeWindow\": {\"$max\": \"$timeWindow\"}, \"timeZone\": {\"$max\": \"$timeZone\"}, \"intervals\": {\"$push\": \"$$ROOT\"}}}, {\"$addFields\": {\"day\": \"$_id.day\"}}, {\"$project\": {\"_id\": 0}}, {\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$skip\": 0}, {\"$limit\": 100}]";
         List<Bson> aggregate = PipelineUtils.aggregate(
                 List.of(FieldPair.of("day", "day")),
                 List.of(
@@ -81,21 +81,22 @@ public class PipelineUtilsTest {
                         .build(),
                 false);
 
-        Assertions.assertEquals(expectedResult, toJson(aggregate));
+        Assertions.assertEquals(expectedResult, PipelineUtils.toJson(aggregate));
     }
 
     @Test
     public void test_AggregateAndCount_withElementKey() {
-        String expectedResult="[{\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$group\": {\"_id\": {\"day\": \"$day\"}, \"highThreshold\": {\"$max\": \"$highThreshold\"}, \"lowThreshold\": {\"$max\": \"$lowThreshold\"}, \"disturbedState\": {\"$max\": \"$disturbedState\"}, \"totalDailyEvents\": {\"$max\": \"$totalDailyEvents\"}, \"timeWindow\": {\"$max\": \"$timeWindow\"}, \"timeZone\": {\"$max\": \"$timeZone\"}, \"intervals\": {\"$push\": \"$$ROOT\"}}}, {\"$addFields\": {\"day\": \"$_id.day\"}}, {\"$facet\": {\"data\": [{\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$skip\": 0}, {\"$limit\": 100}, {\"$project\": {\"_id\": 0, \"day\": \"$_id.day\", \"highThreshold\": 1, \"lowThreshold\": 1, \"disturbedState\": 1, \"totalDailyEvents\": 1, \"timeWindow\": 1, \"timeZone\": 1, \"intervals\": 1}}], \"metadata\": [{\"$count\": \"totalCount\"}]}}]";
+        String expectedResult="[{\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$group\": {\"_id\": {\"day\": \"$day\"}, \"highThreshold\": {\"$first\": \"$highThreshold\"}, \"lowThreshold\": {\"$first\": \"$lowThreshold\"}, \"disturbedState\": {\"$max\": \"$disturbedState\"}, \"totalDailyEvents\": {\"$sum\": \"$totalEvents\"}, \"maxEventsInPeriod\": {\"$max\": \"$totalEvents\"}, \"timeWindow\": {\"$first\": \"$timeWindow\"}, \"timeZone\": {\"$first\": \"$timeZone\"}, \"intervals\": {\"$push\": \"$$ROOT\"}}}, {\"$addFields\": {\"day\": \"$_id.day\"}}, {\"$project\": {\"_id\": 0}}, {\"$facet\": {\"data\": [{\"$sort\": {\"day\": -1, \"shift\": -1}}, {\"$skip\": 0}, {\"$limit\": 100}, {\"$project\": {\"_id\": 0, \"day\": \"$_id.day\", \"highThreshold\": 1, \"lowThreshold\": 1, \"disturbedState\": 1, \"totalDailyEvents\": 1, \"maxEventsInPeriod\": 1, \"timeWindow\": 1, \"timeZone\": 1, \"intervals\": 1}}], \"metadata\": [{\"$count\": \"totalCount\"}]}}]";
         List<Bson> aggregate = PipelineUtils.aggregate(
                 List.of(FieldPair.of("day", "day")),
                 List.of(
-                        FieldMap.of(AccumulatorType.MAX, "highThreshold", "highThreshold"),
-                        FieldMap.of(AccumulatorType.MAX, "lowThreshold", "lowThreshold"),
+                        FieldMap.of(AccumulatorType.FIRST, "highThreshold", "highThreshold"),
+                        FieldMap.of(AccumulatorType.FIRST, "lowThreshold", "lowThreshold"),
                         FieldMap.of(AccumulatorType.MAX, "disturbedState", "disturbedState"),
-                        FieldMap.of(AccumulatorType.MAX, "totalDailyEvents", "totalDailyEvents"),
-                        FieldMap.of(AccumulatorType.MAX, "timeWindow", "timeWindow"),
-                        FieldMap.of(AccumulatorType.MAX, "timeZone", "timeZone")
+                        FieldMap.of(AccumulatorType.SUM, "totalEvents", "totalDailyEvents"),
+                        FieldMap.of(AccumulatorType.MAX, "totalEvents", "maxEventsInPeriod"),
+                        FieldMap.of(AccumulatorType.FIRST, "timeWindow", "timeWindow"),
+                        FieldMap.of(AccumulatorType.FIRST, "timeZone", "timeZone")
                 ),
                 "intervals",
                 (String) null,
@@ -105,14 +106,6 @@ public class PipelineUtilsTest {
                         .build(),
                 true);
 
-        Assertions.assertEquals(expectedResult, toJson(aggregate));
-    }
-
-    private String toJson(List<Bson> aggregate) {
-        return "[" +
-                aggregate.stream()
-                        .map(stage -> stage.toBsonDocument().toJson())
-                        .collect(Collectors.joining(", "))
-                + "]";
+        Assertions.assertEquals(expectedResult, PipelineUtils.toJson(aggregate));
     }
 }

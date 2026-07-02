@@ -15,6 +15,7 @@ import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PipelineUtils {
 
@@ -116,7 +117,7 @@ public class PipelineUtils {
         dataPipeline.add(
                 Aggregates.project(Projections.fields(projections))
         );
-
+        pipeline.add(Aggregates.project(Projections.excludeId()));
         if (!withCount) {
             pipeline.add(Aggregates.sort(getBsonSort(findDTO)));
             pipeline.add(Aggregates.skip(findDTO.getPage() * findDTO.getLimit()));
@@ -135,7 +136,6 @@ public class PipelineUtils {
                         new Facet("metadata", metadataPipeline)
                 )
         );
-
         return pipeline;
     }
 
@@ -187,5 +187,13 @@ public class PipelineUtils {
                     : Sorts.ascending(findDTO.getOrderBy()[i]));
         }
         return Sorts.orderBy(sorts);
+    }
+
+    public static String toJson(List<Bson> aggregate) {
+        return "[" +
+                aggregate.stream()
+                        .map(stage -> stage.toBsonDocument().toJson())
+                        .collect(Collectors.joining(", "))
+                + "]";
     }
 }
