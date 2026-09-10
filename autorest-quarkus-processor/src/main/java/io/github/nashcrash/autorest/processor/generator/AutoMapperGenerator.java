@@ -31,6 +31,11 @@ public class AutoMapperGenerator {
                 .addAnnotation(genericRestApiDTO.getGeneratedAnnotationSpec())
                 .addAnnotation(AnnotationSpec.builder(ClassName.get("org.mapstruct", "Mapper"))
                         .addMember("componentModel", "$S", "jakarta") // Integrate MapStruct with Quarkus CDI
+                        .addMember("builder",
+                                "$L",
+                                AnnotationSpec.builder(ClassName.get("org.mapstruct", "Builder"))
+                                        .addMember("disableBuilder", "$L", true)
+                                        .build())
                         .build());
 
         if (genericRestApiDTO.getIdFields() != null && !genericRestApiDTO.getIdFields().isEmpty()) {

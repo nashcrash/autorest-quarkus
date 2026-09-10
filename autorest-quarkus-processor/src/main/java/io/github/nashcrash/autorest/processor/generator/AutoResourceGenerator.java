@@ -34,7 +34,7 @@ public class AutoResourceGenerator {
         if (isReactive) {
             superClass = ParameterizedTypeName.get(ClassName.get("io.github.nashcrash.autorest.common.entity.reactive", "AbstractEntityReactiveResource"), entityType, dtoType);
         } else {
-            superClass = ParameterizedTypeName.get(ClassName.get("io.github.nashcrash.autorest.common.entity.reactive", "AbstractEntityRestResource"), entityType, dtoType);
+            superClass = ParameterizedTypeName.get(ClassName.get("io.github.nashcrash.autorest.common.entity.rest", "AbstractEntityRestResource"), entityType, dtoType);
         }
 
         // 1. Class Definition

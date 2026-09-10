@@ -25,7 +25,7 @@ public class AutoRepositoryGenerator {
             if (dbType == DatabaseType.NOSQL) {
                 superClass = ParameterizedTypeName.get(ClassName.get("io.github.nashcrash.autorest.common.entity.rest", "AbstractEntityRestMongoRepository"), entityType);
             } else {
-                superClass = ParameterizedTypeName.get(ClassName.get("io.github.nashcrash.autorest.common.entity.reactive", "AbstractEntityRestSqlRepository"), entityType);
+                superClass = ParameterizedTypeName.get(ClassName.get("io.github.nashcrash.autorest.common.entity.rest", "AbstractEntityRestSqlRepository"), entityType);
             }
         }
 
