@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.github.nashcrash.autorest</groupId>
         <artifactId>autorest-quarkus-parent</artifactId>
-        <version>1.5.10</version>
+        <version>1.5.11-SNAPSHOT</version>
     </parent>
     <artifactId>autorest-quarkus-api</artifactId>
 
@@ -42,6 +42,7 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-messaging-kafka</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>

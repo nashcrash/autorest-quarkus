@@ -3,6 +3,8 @@ database: test
 collections:
   entity:
     - _id: "MTAwMDU1"
+      insertionUser: "TEST"
+      lastModifiedUser: "TEST"
       eventCode: "100055"
       transactionType: "BT"
       value: 12.35
@@ -15,6 +17,8 @@ collections:
           description: "Label 987"
 
     - _id: "MTAwMDgw"
+      insertionUser: "TEST"
+      lastModifiedUser: "TEST"
       eventCode: "100080"
       transactionType: "SA"
       value: 45.67

@@ -1,10 +1,8 @@
 [
   {
     "id": "MTAwMDU1",
-    "insertionUser": null,
-    "lastModifiedUser": null,
-    "insertionDate": null,
-    "lastModifiedDate": null,
+    "insertionUser": "TEST",
+    "lastModifiedUser": "TEST",
     "eventCode": "100055",
     "transactionType": "BT",
     "value": 12.35,
@@ -25,10 +23,8 @@
   },
   {
     "id": "MTAwMDgw",
-    "insertionUser": null,
-    "lastModifiedUser": null,
-    "insertionDate": null,
-    "lastModifiedDate": null,
+    "insertionUser": "TEST",
+    "lastModifiedUser": "TEST",
     "eventCode": "100080",
     "transactionType": "SA",
     "value": 45.67,
