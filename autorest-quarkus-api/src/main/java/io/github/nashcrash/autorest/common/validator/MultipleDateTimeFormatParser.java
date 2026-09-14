@@ -15,6 +15,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.Date;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
     public static final String ISO_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
@@ -34,13 +37,7 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
         Date refDate = null;
         for (String pattern : patterns) {
             try {
-                String[] pattern_parts = pattern.split("@T");
-                refDate = new SimpleDateFormat(pattern_parts[0]).parse(referenceDate);
-                if (pattern_parts.length>1) {
-                    String day=new SimpleDateFormat("yyyy-MM-dd").format(refDate);
-                    ZoneId zoneId = (pattern_parts.length>2) ? ZoneId.of(pattern_parts[2]) : ZoneId.systemDefault();
-                    refDate = combineToDate(day, pattern_parts[1], zoneId);
-                }
+                refDate = parseDate(referenceDate, pattern);
                 break;
             } catch (ParseException ignore) {
             }
@@ -49,6 +46,47 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
             throw new CustomException(Response.Status.BAD_REQUEST, MessageFormat.format(message, referenceDate));
         }
         return refDate;
+    }
+
+    private static final Pattern ZONE_PATTERN = Pattern.compile("@Z\\(([-+:/0-9a-zA-Z_]+)\\)");
+    private static final Pattern TIME_PATTERN = Pattern.compile("@T\\(([0-9]{2}):([0-9]{2})(?::([0-9]{2}))?(?:\\.([0-9]{3}))?\\)");
+
+    /**
+     * Parse a date applying optional custom extensions:
+     * - @Z(zoneId)
+     * - @T(HH:mm[:ss][.SSS])
+     */
+    public static Date parseDate(String referenceDate, String pattern) throws ParseException {
+        String effectivePattern = pattern;
+
+        ZoneId zoneId = null;
+        Matcher zoneMatcher = ZONE_PATTERN.matcher(pattern);
+        if (zoneMatcher.find()) {
+            zoneId = ZoneId.of(zoneMatcher.group(1));
+            effectivePattern = effectivePattern.replace(zoneMatcher.group(0), "");
+        }
+        Matcher timeMatcher = TIME_PATTERN.matcher(pattern);
+        if (timeMatcher.find()) {
+            effectivePattern = effectivePattern.replace(timeMatcher.group(0), "");
+        }
+        effectivePattern = effectivePattern.trim();
+
+        SimpleDateFormat sdf = new SimpleDateFormat(effectivePattern);
+        if (zoneId != null) {
+            sdf.setTimeZone(TimeZone.getTimeZone(zoneId));
+        }
+        Date parsedDate = sdf.parse(referenceDate);
+        if (!timeMatcher.find(0)) {
+            return parsedDate;
+        }
+        int hour = Integer.parseInt(timeMatcher.group(1));
+        int minute = Integer.parseInt(timeMatcher.group(2));
+        int second = timeMatcher.group(3) != null ? Integer.parseInt(timeMatcher.group(3)): 0;
+        int milli = timeMatcher.group(4) != null? Integer.parseInt(timeMatcher.group(4)): 0;
+
+        ZoneId effectiveZone = zoneId != null ? zoneId : ZoneId.systemDefault();
+        ZonedDateTime zdt = parsedDate.toInstant().atZone(effectiveZone).with(LocalTime.of(hour, minute, second, milli * 1_000_000));
+        return Date.from(zdt.toInstant());
     }
 
     private static Date combineToDate(String dateStr, String timeStr, ZoneId zoneId) {
