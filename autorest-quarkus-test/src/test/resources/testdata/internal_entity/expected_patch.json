@@ -1,0 +1,22 @@
+{
+  "id": "MTAwMDU1",
+  "insertionUser": "TEST",
+  "lastModifiedUser": "TEST",
+  "eventCode": "100055",
+  "transactionType": "BT",
+  "value": 12.36,
+  "movements": [
+    {
+      "code": "321",
+      "description": "Label 321"
+    },
+    {
+      "code": "654",
+      "description": "Label 654"
+    },
+    {
+      "code": "987",
+      "description": "Label 987"
+    }
+  ]
+}

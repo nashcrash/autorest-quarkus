@@ -1,0 +1,20 @@
+constant:
+  internal-entity:
+    entity-name: internal_entity
+    entity-base-path: /internal_entity
+    test-data:
+      id: MTAwMDU1
+      expected-get: "testdata/internal_entity/expected_get.json"
+      expected-find: "testdata/internal_entity/expected_find.json"
+      expected-create: "testdata/internal_entity/expected_create.json"
+      expected-update: "testdata/internal_entity/expected_get.json"
+      expected-patch: "testdata/internal_entity/expected_patch.json"
+
+internal-entity-test:
+  cases:
+    #STANDARD ENTITY TEST
+    - name: find-${constant.internal-entity.entity-name}-ok
+      type: GET
+      url: ${constant.rootPath}${constant.internal-entity.entity-base-path}
+      expected-status: 200
+      expected-file-body: ${constant.internal-entity.test-data.expected-find}

@@ -1,0 +1,11 @@
+{
+  "eventCode": "122055",
+  "transactionType": "BT",
+  "value": 44.35,
+  "movements": [
+    {
+      "code": "321",
+      "description": "Label 321"
+    }
+  ]
+}
