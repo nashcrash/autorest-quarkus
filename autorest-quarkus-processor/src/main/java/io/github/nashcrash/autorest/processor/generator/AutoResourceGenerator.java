@@ -1,7 +1,6 @@
 package io.github.nashcrash.autorest.processor.generator;
 
 import com.squareup.javapoet.*;
-import io.github.nashcrash.autorest.common.entity.AccumulatorType;
 import io.github.nashcrash.autorest.common.entity.FieldMap;
 import io.github.nashcrash.autorest.common.entity.FieldPair;
 import io.github.nashcrash.autorest.common.entity.ResultDTO;
@@ -18,7 +17,6 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class AutoResourceGenerator {
 

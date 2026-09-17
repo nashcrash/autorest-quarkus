@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -160,24 +159,28 @@ public class AutoRestProcessor extends AbstractProcessor {
                 .idFields(getIdFieldsSafe(entityElement))
                 .generatedAnnotationSpec(getGeneratedAnnotation())
                 .aggregate(aggregateDTOS)
-                .isResourceClient(resourceClient != null)
+                .isResourceClient((resourceClient != null && annotation.generate().client()))
+                .isResource(annotation.generate().resource())
+                .isService(annotation.generate().service())
+                .isMapper(annotation.generate().mapper())
+                .isRepository(annotation.generate().repository())
                 .configKey(resourceClient != null ? resourceClient.configKey() : null)
                 .build();
 
         // 1. Generate Repository
-        if (checkExists(genericRestApiDTO, "Repository")) {
+        if (genericRestApiDTO.isRepository() && checkExists(genericRestApiDTO, "Repository")) {
             JavaFile repoFile = repositoryGenerator.generateRepository(genericRestApiDTO);
             repoFile.writeTo(processingEnv.getFiler());
         }
 
         // 2. Generate Mapper
-        if (checkExists(genericRestApiDTO, "Mapper")) {
+        if (genericRestApiDTO.isMapper() && checkExists(genericRestApiDTO, "Mapper")) {
             JavaFile mapperFile = mapperGenerator.generateMapper(genericRestApiDTO);
             mapperFile.writeTo(processingEnv.getFiler());
         }
 
         // 3. Generate Service
-        if (checkExists(genericRestApiDTO, "Service")) {
+        if (genericRestApiDTO.isService() && checkExists(genericRestApiDTO, "Service")) {
             JavaFile serviceFile = serviceGenerator.generateService(genericRestApiDTO);
             serviceFile.writeTo(processingEnv.getFiler());
         }
@@ -189,7 +192,7 @@ public class AutoRestProcessor extends AbstractProcessor {
         }
 
         // 5. Generate Resource
-        if (checkExists(genericRestApiDTO, "Resource")) {
+        if (genericRestApiDTO.isResource() && checkExists(genericRestApiDTO, "Resource")) {
             JavaFile resourceFile = restGenerator.generateResource(genericRestApiDTO);
             resourceFile.writeTo(processingEnv.getFiler());
         }

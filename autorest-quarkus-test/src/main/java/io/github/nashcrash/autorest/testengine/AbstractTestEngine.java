@@ -6,13 +6,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
+import io.smallrye.config.SmallRyeConfig;
+import io.smallrye.config.SmallRyeConfigBuilder;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import io.smallrye.reactive.messaging.memory.InMemorySink;
 import io.smallrye.reactive.messaging.memory.InMemorySource;
 import jakarta.enterprise.inject.Any;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.spi.Connector;
 import org.hamcrest.Description;
@@ -21,7 +23,6 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.StringDescription;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +43,28 @@ public abstract class AbstractTestEngine {
     @Connector("smallrye-in-memory")
     protected InMemoryConnector connector;
 
+    public void init() {
+        TestEngineProperties annotation = this.getClass().getAnnotation(TestEngineProperties.class);
+        if (annotation == null) {
+            throw new IllegalStateException(
+                    "Missing @EngineTestProperties on " + this.getClass().getName());
+        }
+        SmallRyeConfig current = (SmallRyeConfig) ConfigProvider.getConfig();
+        SmallRyeConfigBuilder builder = new SmallRyeConfigBuilder();
+        builder.addDefaultInterceptors();
+        current.getConfigSources().forEach(builder::withSources);
+        for (Class<? extends TestCasesProperties> clazz : annotation.value()) {
+            builder.withMapping(clazz);
+        }
+        SmallRyeConfig config = builder.build();
+        this.testCasesProperties = Arrays.stream(annotation.value())
+                .map(config::getConfigMapping)
+                .map(TestCasesProperties.class::cast)
+                .toList();
+    }
+    public void init(List<TestCasesProperties> testCasesProperties) {
+        this.testCasesProperties = testCasesProperties;
+    }
     public void init(TestCasesProperties... testCasesProperties) {
         this.testCasesProperties = List.of(testCasesProperties);
     }

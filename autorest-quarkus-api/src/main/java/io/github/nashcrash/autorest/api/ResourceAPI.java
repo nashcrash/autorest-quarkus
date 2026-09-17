@@ -27,4 +27,17 @@ public @interface ResourceAPI {
      * For NOSQL database, use a hash of the specified fields, such as technical id
      */
     String[] idFields() default {};
+
+    /**
+     * Configure classes to generate
+     */
+    @interface ClassesToGenerate {
+        boolean resource() default true;
+        boolean service() default true;
+        boolean mapper() default true;
+        boolean repository() default true;
+        boolean client() default true;
+    }
+
+    ResourceAPI.ClassesToGenerate generate() default @ResourceAPI.ClassesToGenerate(resource = true, service = true, mapper = true, repository = true, client = true);
 }

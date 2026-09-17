@@ -1,7 +1,6 @@
 package io.github.nashcrash.autorest.processor.dto;
 
 import com.squareup.javapoet.TypeName;
-import io.github.nashcrash.autorest.common.entity.AccumulatorType;
 import io.github.nashcrash.autorest.common.entity.FieldMap;
 import io.github.nashcrash.autorest.common.entity.FieldPair;
 import lombok.AllArgsConstructor;
@@ -11,7 +10,6 @@ import lombok.experimental.SuperBuilder;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
-import java.util.Map;
 
 @Data
 @NoArgsConstructor

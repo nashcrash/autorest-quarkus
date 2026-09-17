@@ -17,6 +17,10 @@ import java.util.List;
 @SuperBuilder(toBuilder = true)
 public class GenericRestApiDTO {
     private boolean isResourceClient;
+    private boolean isResource;
+    private boolean isService;
+    private boolean isMapper;
+    private boolean isRepository;
     private String configKey;
     private String packageName;
     private String basePath;

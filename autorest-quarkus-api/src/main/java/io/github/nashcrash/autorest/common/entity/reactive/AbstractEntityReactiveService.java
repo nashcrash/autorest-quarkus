@@ -4,7 +4,6 @@ import io.github.nashcrash.autorest.common.entity.*;
 import io.smallrye.mutiny.Uni;
 
 import java.util.List;
-import java.util.Map;
 
 public interface AbstractEntityReactiveService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> {
     Uni<DTO> findById(String id);

@@ -15,7 +15,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public abstract class AbstractEntityReactiveSqlService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityReactiveService<ENTITY, DTO> {

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class EngineTestProfile implements QuarkusTestProfile {
+public class TestEngineProfile implements QuarkusTestProfile {
 
     private static final String PROFILE = "engine-test";
     private static final String PREFIX = "application-" + PROFILE;
