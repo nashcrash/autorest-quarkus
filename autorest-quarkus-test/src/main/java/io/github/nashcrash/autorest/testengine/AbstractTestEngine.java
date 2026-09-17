@@ -44,20 +44,21 @@ public abstract class AbstractTestEngine {
     protected InMemoryConnector connector;
 
     public void init() {
-        TestEngineProperties annotation = this.getClass().getAnnotation(TestEngineProperties.class);
-        if (annotation == null) {
+        List<Class<? extends TestCasesProperties>> mappingClasses =
+                ClasspathTestPropertiesScanner.discover(Thread.currentThread().getContextClassLoader());
+        if (mappingClasses.isEmpty()) {
             throw new IllegalStateException(
-                    "Missing @EngineTestProperties on " + this.getClass().getName());
+                    "No @TestEngineProperties mappings found on the classpath");
         }
         SmallRyeConfig current = (SmallRyeConfig) ConfigProvider.getConfig();
         SmallRyeConfigBuilder builder = new SmallRyeConfigBuilder();
         builder.addDefaultInterceptors();
         current.getConfigSources().forEach(builder::withSources);
-        for (Class<? extends TestCasesProperties> clazz : annotation.value()) {
+        for (Class<? extends TestCasesProperties> clazz : mappingClasses) {
             builder.withMapping(clazz);
         }
         SmallRyeConfig config = builder.build();
-        this.testCasesProperties = Arrays.stream(annotation.value())
+        this.testCasesProperties = mappingClasses.stream()
                 .map(config::getConfigMapping)
                 .map(TestCasesProperties.class::cast)
                 .toList();
@@ -71,6 +72,7 @@ public abstract class AbstractTestEngine {
 
     @Test
     public void runConfiguredTests() throws Exception {
+        if (testCasesProperties==null) init();
         for (TestCasesProperties testCasesProperty : testCasesProperties) {
             System.out.println("##### " + testCasesProperty.getClass().getSimpleName() + " #####");
             for (TestCasesProperties.TestCase testCase : testCasesProperty.cases()) {
