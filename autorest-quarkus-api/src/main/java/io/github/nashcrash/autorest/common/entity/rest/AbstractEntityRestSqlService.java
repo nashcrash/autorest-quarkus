@@ -36,6 +36,7 @@ public abstract class AbstractEntityRestSqlService<ENTITY extends AbstractEntity
         return mapper.toDto(entity);
     }
 
+    @Transactional
     public DTO create(DTO dto) {
         ENTITY entity = repository.findById(Long.parseLong(dto.getId()));
         if (entity != null)
@@ -65,6 +66,7 @@ public abstract class AbstractEntityRestSqlService<ENTITY extends AbstractEntity
         }
     }
 
+    @Transactional
     public DTO upsert(DTO dto) {
         ENTITY entity = mapper.toEntity(dto);
         repository.persist(entity);
@@ -109,6 +111,7 @@ public abstract class AbstractEntityRestSqlService<ENTITY extends AbstractEntity
         return mapper.toDto(entity);
     }
 
+    @Transactional
     public void deleteById(String id) {
         repository.deleteById(Long.parseLong(id));
     }

@@ -43,6 +43,7 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
         return mapper.toDto(entity);
     }
 
+    @Transactional
     public DTO create(DTO dto) {
         ENTITY entity = mapper.toEntity(dto);
         repository.persist(entity);
@@ -69,6 +70,7 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
         }
     }
 
+    @Transactional
     public DTO upsert(DTO dto) {
         ENTITY entity = mapper.toEntity(dto);
         repository.persistOrUpdate(entity);
@@ -112,6 +114,7 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
         return mapper.toDto(entity);
     }
 
+    @Transactional
     public void deleteById(String id) {
         repository.deleteById(id);
     }
