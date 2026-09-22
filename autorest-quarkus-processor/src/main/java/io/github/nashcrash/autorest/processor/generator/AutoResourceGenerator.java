@@ -13,6 +13,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
@@ -41,6 +42,10 @@ public class AutoResourceGenerator {
                 .addAnnotation(genericRestApiDTO.getGeneratedAnnotationSpec())
                 .addAnnotation(ClassName.get("lombok.extern.slf4j", "Slf4j"))
                 .addAnnotation(AnnotationSpec.builder(Path.class).addMember("value", "$S", basePath).build())
+                .addAnnotation(AnnotationSpec.builder(Tag.class)
+                        .addMember("name", "$S", entityName)
+                        .addMember("description", "$S", "Resource for " + entityName)
+                        .build())
                 .addAnnotation(AnnotationSpec.builder(Produces.class).addMember("value", "$T.APPLICATION_JSON", MediaType.class).build())
                 .addAnnotation(AnnotationSpec.builder(Consumes.class).addMember("value", "$T.APPLICATION_JSON", MediaType.class).build())
                 .addAnnotation(ClassName.get("jakarta.enterprise.context", "ApplicationScoped"));
