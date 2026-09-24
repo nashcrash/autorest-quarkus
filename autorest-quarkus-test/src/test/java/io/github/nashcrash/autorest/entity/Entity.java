@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Date;
 import java.util.List;
 
 @ResourceAPI(
@@ -69,5 +70,6 @@ public class Entity extends AbstractEntityMongo {
     private String transactionType;
     private Double value;
     private List<SubEntity> movements;
-
+    private Date dataIn;
+    private Date dataOut;
 }

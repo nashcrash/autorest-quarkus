@@ -91,17 +91,6 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
         return Date.from(zdt.toInstant());
     }
 
-    private static Date combineToDate(String dateStr, String timeStr, ZoneId zoneId) {
-        DateTimeFormatter timeFormatter = new DateTimeFormatterBuilder()
-                .appendPattern("HH:mm:ss")
-                .appendFraction(ChronoField.MILLI_OF_SECOND, 0, 3, true)
-                .toFormatter();
-        LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
-        LocalTime time = LocalTime.parse(timeStr, timeFormatter);
-        ZonedDateTime zonedDateTime = ZonedDateTime.of(date, time, zoneId);
-        return Date.from(zonedDateTime.toInstant());
-    }
-
     @Override
     public Date fromString(String s) {
         return parseDate(s, patterns, message);
@@ -109,6 +98,17 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
 
     @Override
     public String toString(Date date) {
-        return new SimpleDateFormat(serializePattern==null ? ISO_PATTERN : serializePattern).format(date);
+        String effectivePattern = serializePattern==null ? ISO_PATTERN : serializePattern;
+        ZoneId zoneId = null;
+        Matcher zoneMatcher = ZONE_PATTERN.matcher(effectivePattern);
+        if (zoneMatcher.find()) {
+            zoneId = ZoneId.of(zoneMatcher.group(1));
+            effectivePattern = effectivePattern.replace(zoneMatcher.group(0), "");
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat(effectivePattern);
+        if (zoneId != null) {
+            sdf.setTimeZone(TimeZone.getTimeZone(zoneId));
+        }
+        return sdf.format(date);
     }
 }

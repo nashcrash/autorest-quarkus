@@ -2,8 +2,8 @@ package io.github.nashcrash.autorest.common.validator;
 
 import jakarta.ws.rs.ext.ParamConverter;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.Date;
 
 public class MultipleInstantFormatParser implements ParamConverter<Instant> {
     public static final String ISO_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
@@ -29,6 +29,6 @@ public class MultipleInstantFormatParser implements ParamConverter<Instant> {
 
     @Override
     public String toString(Instant date) {
-        return new SimpleDateFormat(serializePattern==null ? ISO_PATTERN : serializePattern).format(date);
+        return new MultipleDateTimeFormatParser(patterns, serializePattern, message).toString(Date.from(date));
     }
 }
