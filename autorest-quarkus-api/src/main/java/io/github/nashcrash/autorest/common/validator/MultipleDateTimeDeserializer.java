@@ -15,6 +15,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class MultipleDateTimeDeserializer extends JsonDeserializer<Date> implements ContextualDeserializer {
     private String[] patterns;
+    private String serializePattern;
     private String message;
 
     @Override
@@ -22,9 +23,10 @@ public class MultipleDateTimeDeserializer extends JsonDeserializer<Date> impleme
         MultipleDateTimeFormat ann = property.getAnnotation(MultipleDateTimeFormat.class);
         if (ann != null) {
             patterns = ann.patterns();
+            serializePattern = ann.serializePattern();
             message = ann.message();
         }
-        return new MultipleDateTimeDeserializer(patterns, message);
+        return new MultipleDateTimeDeserializer(patterns, serializePattern, message);
     }
 
     @Override

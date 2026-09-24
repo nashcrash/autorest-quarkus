@@ -15,6 +15,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class MultipleInstantDeserializer extends JsonDeserializer<Instant> implements ContextualDeserializer {
     private String[] patterns;
+    private String serializePattern;
     private String message;
 
     @Override
@@ -22,9 +23,10 @@ public class MultipleInstantDeserializer extends JsonDeserializer<Instant> imple
         MultipleDateTimeFormat ann = property.getAnnotation(MultipleDateTimeFormat.class);
         if (ann != null) {
             patterns = ann.patterns();
+            serializePattern = ann.serializePattern();
             message = ann.message();
         }
-        return new MultipleInstantDeserializer(patterns, message);
+        return new MultipleInstantDeserializer(patterns, serializePattern, message);
     }
 
     @Override

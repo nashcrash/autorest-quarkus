@@ -27,11 +27,12 @@ public class MultipleDateTimeFormatProvider implements ParamConverterProvider {
         for (Annotation annotation : annotations) {
             if (annotation instanceof MultipleDateTimeFormat multipleDateTimeFormat) {
                 String[] patterns = multipleDateTimeFormat.patterns();
+                String serializePattern = multipleDateTimeFormat.serializePattern();
                 String message = multipleDateTimeFormat.message();
                 if (rawType.equals(Date.class)) {
-                    return (ParamConverter<T>) new MultipleDateTimeFormatParser(patterns, message);
+                    return (ParamConverter<T>) new MultipleDateTimeFormatParser(patterns, serializePattern, message);
                 } else if (rawType.equals(Instant.class)) {
-                    return (ParamConverter<T>) new MultipleInstantFormatParser(patterns, message);
+                    return (ParamConverter<T>) new MultipleInstantFormatParser(patterns, serializePattern, message);
                 }
             }
         }

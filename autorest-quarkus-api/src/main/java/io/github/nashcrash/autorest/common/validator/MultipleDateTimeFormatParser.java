@@ -23,10 +23,12 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
     public static final String ISO_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
     public static final String DEFAULT_MESSAGE = "Invalid date format: {0}";
     private String[] patterns;
+    private String serializePattern;
     private String message;
 
-    public MultipleDateTimeFormatParser(String[] patterns, String message) {
+    public MultipleDateTimeFormatParser(String[] patterns, String serializePattern, String message) {
         this.patterns = patterns;
+        this.serializePattern = serializePattern;
         this.message = message;
     }
 
@@ -107,6 +109,6 @@ public class MultipleDateTimeFormatParser implements ParamConverter<Date> {
 
     @Override
     public String toString(Date date) {
-        return new SimpleDateFormat(ISO_PATTERN).format(date);
+        return new SimpleDateFormat(serializePattern==null ? ISO_PATTERN : serializePattern).format(date);
     }
 }

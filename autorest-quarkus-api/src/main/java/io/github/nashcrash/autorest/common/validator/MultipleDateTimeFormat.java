@@ -7,6 +7,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface MultipleDateTimeFormat {
     String[] patterns() default {};
-
+    String serializePattern() default "yyyy-MM-dd'T'HH:mm:ss.SSSX";
     String message() default "Invalid date format";
 }

@@ -16,6 +16,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class MultipleInstantSerializer extends JsonSerializer<Instant> implements ContextualSerializer {
     private String[] patterns;
+    private String serializePattern;
     private String message;
 
     @Override
@@ -23,9 +24,10 @@ public class MultipleInstantSerializer extends JsonSerializer<Instant> implement
         MultipleDateTimeFormat ann = property.getAnnotation(MultipleDateTimeFormat.class);
         if (ann != null) {
             patterns = ann.patterns();
+            serializePattern = ann.serializePattern();
             message = ann.message();
         }
-        return new MultipleInstantSerializer(patterns, message);
+        return new MultipleInstantSerializer(patterns, serializePattern, message);
     }
 
     @Override
@@ -34,6 +36,6 @@ public class MultipleInstantSerializer extends JsonSerializer<Instant> implement
             jsonGenerator.writeNull();
             return;
         }
-        jsonGenerator.writeString(new MultipleInstantFormatParser(patterns, message).toString(date));
+        jsonGenerator.writeString(new MultipleInstantFormatParser(patterns, serializePattern, message).toString(date));
     }
 }
