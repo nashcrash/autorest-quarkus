@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.github.nashcrash.autorest</groupId>
         <artifactId>autorest-quarkus-parent</artifactId>
-        <version>1.5.16</version>
+        <version>1.5.17-SNAPSHOT</version>
     </parent>
     <artifactId>autorest-quarkus-test</artifactId>
 
@@ -62,10 +62,6 @@
             <artifactId>mapstruct-processor</artifactId>
             <version>${mapstruct.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm-panache</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
