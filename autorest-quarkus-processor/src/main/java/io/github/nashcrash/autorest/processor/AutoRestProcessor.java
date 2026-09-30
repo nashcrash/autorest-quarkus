@@ -159,7 +159,7 @@ public class AutoRestProcessor extends AbstractProcessor {
                 .idFields(getIdFieldsSafe(entityElement))
                 .generatedAnnotationSpec(getGeneratedAnnotation())
                 .aggregate(aggregateDTOS)
-                .isResourceClient((resourceClient != null && annotation.generate().client()))
+                .isResourceClient((resourceClient != null || annotation.generate().client()))
                 .isResource(annotation.generate().resource())
                 .isService(annotation.generate().service())
                 .isMapper(annotation.generate().mapper())
