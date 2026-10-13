@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
 @ResourceAPI(
         basePath = "/internal_entity",
         dto = InternalEntityDTO.class,
-        idFields = {"eventCode"},
+        businessKeyFields = {"eventCode"},
         generate = @ResourceAPI.ClassesToGenerate(resource = false)
 )
 @MongoEntity(collection = "internal_entity")

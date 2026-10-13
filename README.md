@@ -18,7 +18,7 @@ Add the API dependency and register the annotation processor:
 <dependency>
     <groupId>io.github.nashcrash.autorest</groupId>
     <artifactId>autorest-quarkus-api</artifactId>
-    <version>1.5.10</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -38,7 +38,7 @@ Add the API dependency and register the annotation processor:
                     <path>
                         <groupId>io.github.nashcrash.autorest</groupId>
                         <artifactId>autorest-quarkus-processor</artifactId>
-                        <version>1.5.10</version>
+                        <version>2.0.0</version>
                     </path>
                     <path>
                         <groupId>org.mapstruct</groupId>
@@ -85,7 +85,9 @@ public class OrderDTO extends AbstractDTO {
 }
 ```
 
-At compile time the annotation processor generates `OrderRepository`, `OrderMapper`, `OrderService` and `OrderResource`, exposing a full CRUD API under `/orders` (create, get by id, search/find with pagination and generic filtering, patch, upsert, delete) — fully described in the generated OpenAPI/Swagger document.
+At compile time the annotation processor generates `OrderRepository`, `OrderMapper`, `OrderService` and `OrderResource`, exposing a full CRUD API under `/orders` (create, get by id, get by business key, search/find with pagination and generic filtering, patch, upsert, delete by business key) — fully described in the generated OpenAPI/Swagger document.
+
+Every entity carries two identifiers: the technical `id`, which identifies a single version, and the `businessKey`, which identifies the entity over time and is the reference other entities should store. Declare `@ResourceAPI(businessKeyFields = {"customerCode"})` to derive the business key from business fields; otherwise it is assigned once, at creation.
 
 See [Getting Started](https://github.com/nashcrash/autorest-quarkus/wiki/Getting-Started) on the wiki for a step-by-step walkthrough, including the SQL and historical-entity variants.
 

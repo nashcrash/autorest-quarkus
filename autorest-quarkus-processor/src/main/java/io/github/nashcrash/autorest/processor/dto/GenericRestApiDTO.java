@@ -30,7 +30,7 @@ public class GenericRestApiDTO {
     private DatabaseType databaseType;
     private boolean isReactive;
     private boolean hasConsumer;
-    private List<String> idFields;
+    private List<String> businessKeyFields;
     private TypeName entityType;
     private TypeName dtoType;
     private AnnotationSpec generatedAnnotationSpec;

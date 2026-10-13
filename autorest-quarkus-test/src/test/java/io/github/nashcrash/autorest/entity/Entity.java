@@ -20,7 +20,7 @@ import java.util.List;
 @ResourceAPI(
         basePath = "/entity",
         dto = EntityDTO.class,
-        idFields = {"eventCode"}
+        businessKeyFields = {"eventCode"}
 )
 @Aggregate(
         name = "byTransactionType",

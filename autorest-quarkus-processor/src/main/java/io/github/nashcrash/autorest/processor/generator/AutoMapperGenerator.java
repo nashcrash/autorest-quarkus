@@ -38,7 +38,7 @@ public class AutoMapperGenerator {
                                         .build())
                         .build());
 
-        if (genericRestApiDTO.getIdFields() != null && !genericRestApiDTO.getIdFields().isEmpty()) {
+        if (genericRestApiDTO.getBusinessKeyFields() != null && !genericRestApiDTO.getBusinessKeyFields().isEmpty()) {
             mapperInterface.addMethod(generateExtraEntityData(genericRestApiDTO));
         }
 
@@ -53,7 +53,7 @@ public class AutoMapperGenerator {
         ClassName idUtils = ClassName.get("io.github.nashcrash.autorest.common.util", "IdUtils");
         ClassName mappingTarget = ClassName.get("org.mapstruct", "MappingTarget");
 
-        List<String> params = genericRestApiDTO.getIdFields().stream()
+        List<String> params = genericRestApiDTO.getBusinessKeyFields().stream()
                 .map(e -> "entity." + toGetterName(e, entityElement))
                 .toList();
 
@@ -66,8 +66,8 @@ public class AutoMapperGenerator {
                         .addAnnotation(mappingTarget)
                         .build())
                 .addStatement("super.addExtraEntityData(entity)")
-                .addComment("Set a logical ID")
-                .addStatement("entity.setId($T.generateId($N))", idUtils, StringUtils.join(params, ", "));
+                .addComment("Derive the business key from the declared business key fields")
+                .addStatement("entity.setBusinessKey($T.generateId($N))", idUtils, StringUtils.join(params, ", "));
 
         return createMethod.build();
     }

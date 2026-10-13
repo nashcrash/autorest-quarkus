@@ -20,11 +20,10 @@ import org.bson.conversions.Bson;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityRestService<ENTITY, DTO> {
-    public static final String EM_ENTITY_ALREADY_HISTORIZED_WITH_ID = "Entity already historized with id: ";
-    public static final String EM_ENTITY_NOT_FOUND_WITH_ID = "Entity not found with id: ";
 
     @Inject
     ObjectMapper objectMapper;
@@ -39,13 +38,19 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
 
     public DTO findById(String id) {
         ENTITY entity = repository.findById(id);
-        if (entity == null) throw new CustomException(Response.Status.NOT_FOUND, EM_ENTITY_NOT_FOUND_WITH_ID + id);
+        if (entity == null)
+            throw new CustomException(Response.Status.NOT_FOUND, EntityMessages.EM_ENTITY_NOT_FOUND_WITH_ID + id);
         return mapper.toDto(entity);
+    }
+
+    public DTO findByBusinessKey(String businessKey) {
+        return mapper.toDto(requireCurrentByBusinessKey(businessKey));
     }
 
     @Transactional
     public DTO create(DTO dto) {
         ENTITY entity = mapper.toEntity(dto);
+        requireBusinessKeyAvailable(entity.getBusinessKey());
         repository.persist(entity);
         return mapper.toDto(entity);
     }
@@ -70,53 +75,141 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
         }
     }
 
+    /**
+     * Resolves the entity by business key and applies the DTO to it: a historical entity gets a new
+     * version, a non-historical one is updated in place. Creates the entity when the key is unknown.
+     */
     @Transactional
     public DTO upsert(DTO dto) {
-        ENTITY entity = mapper.toEntity(dto);
-        repository.persistOrUpdate(entity);
-        return mapper.toDto(entity);
+        ENTITY mapped = mapper.toEntity(dto);
+        String businessKey = mapped.getBusinessKey();
+        requireBusinessKey(businessKey);
+
+        ENTITY current = repository.findCurrentByBusinessKey(businessKey).orElse(null);
+        if (current == null) {
+            repository.persist(mapped);
+            return mapper.toDto(mapped);
+        }
+        if (current instanceof AbstractEntityHistorical && dto instanceof AbstractHistoricalDTO historicalDTO) {
+            return mapper.toDto(historize(current, dto, historicalDTO.getEndValidityDate()));
+        }
+        return mapper.toDto(applyInPlace(current, dto));
     }
 
+    /**
+     * Patches one specific version, identified by its technical id. A historical entity is versioned:
+     * the targeted version is closed and a new open one is inserted, carrying the same business key.
+     */
     @Transactional
     public DTO patch(DTO dto) {
         ENTITY entity = repository.findById(dto.getId());
         if (entity == null)
-            throw new CustomException(Response.Status.NOT_FOUND, EM_ENTITY_NOT_FOUND_WITH_ID + dto.getId());
-        if (entity instanceof AbstractEntityHistoricalMongo historicalEntity && dto instanceof AbstractHistoricalDTO historicalDTO) {
+            throw new CustomException(Response.Status.NOT_FOUND, EntityMessages.EM_ENTITY_NOT_FOUND_WITH_ID + dto.getId());
+        if (entity instanceof AbstractEntityHistorical historicalEntity && dto instanceof AbstractHistoricalDTO historicalDTO) {
             //If it is already historicized, there was a conflict....
             if (historicalEntity.getEndValidityDate() != null) {
-                throw new CustomException(Response.Status.CONFLICT, EM_ENTITY_ALREADY_HISTORIZED_WITH_ID + dto.getId());
+                throw new CustomException(Response.Status.CONFLICT, EntityMessages.EM_ENTITY_ALREADY_HISTORIZED_WITH_ID + dto.getId());
             }
-            //I apply the DTO: I use the end of validity date as closure of the effect...
-            if (historicalDTO.getEndValidityDate() == null) {
-                historicalDTO.setEndValidityDate(Instant.now());
-            }
-            historicalEntity.setEndValidityDate(historicalDTO.getEndValidityDate());
-
-            AbstractEntityHistoricalMongo newEntity = (AbstractEntityHistoricalMongo) mapper.cloneToNewInstance(entity);
-            mapper.patchToEntity(dto, (ENTITY) newEntity);
-            newEntity.setStartValidityDate(historicalEntity.getEndValidityDate());
-            newEntity.setEndValidityDate(null);
-            newEntity.setInsertionUser(null);
-            newEntity.setInsertionDate(null);
-            newEntity.setLastModifiedUser(null);
-            newEntity.setLastModifiedDate(null);
-            ///Make sure to use user in context...
-            mapper.addExtraEntityData((ENTITY) newEntity);
-
-            repository.persist((ENTITY) historicalEntity);
-            repository.persist((ENTITY) newEntity);
-            entity = (ENTITY) newEntity;
-        } else {
-            mapper.patchToEntity(dto, entity);
-            repository.persist(entity);
+            return mapper.toDto(historize(entity, dto, historicalDTO.getEndValidityDate()));
         }
-        return mapper.toDto(entity);
+        return mapper.toDto(applyInPlace(entity, dto));
+    }
+
+    /**
+     * Updates a non-historical entity in place. The business key must survive the mapping: when it is
+     * derived from business key fields, the generated mapper recomputes it, so a request that changes
+     * one of those fields would silently move the entity to another identity.
+     */
+    private ENTITY applyInPlace(ENTITY entity, DTO dto) {
+        String businessKey = entity.getBusinessKey();
+        mapper.patchToEntity(dto, entity);
+        mapper.addExtraEntityData(entity);
+        requireBusinessKeyUnchanged(businessKey, entity.getBusinessKey());
+        repository.update(entity);
+        return entity;
     }
 
     @Transactional
     public void deleteById(String id) {
         repository.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteByBusinessKey(String businessKey) {
+        ENTITY entity = requireCurrentByBusinessKey(businessKey);
+        if (entity instanceof AbstractEntityHistorical historical) {
+            // Logical close: the history is kept.
+            historical.setEndValidityDate(Instant.now());
+            mapper.addExtraEntityData(entity);
+            repository.update(entity);
+        } else {
+            repository.delete(entity);
+        }
+    }
+
+    /**
+     * Closes the current version and inserts the next one. The closed version is written first, so
+     * that at no point two open versions share the same business key.
+     *
+     * @param closure the requested end of validity; defaults to now
+     */
+    private ENTITY historize(ENTITY current, DTO dto, Instant closure) {
+        AbstractEntityHistorical historicalEntity = (AbstractEntityHistorical) current;
+        String businessKey = current.getBusinessKey();
+        Instant endValidityDate = closure != null ? closure : Instant.now();
+
+        historicalEntity.setEndValidityDate(endValidityDate);
+        mapper.addExtraEntityData(current);
+        repository.update(current);
+
+        ENTITY newVersion = mapper.cloneToNewInstance(current);
+        mapper.patchToEntity(dto, newVersion);
+        AbstractEntityHistorical newHistorical = (AbstractEntityHistorical) newVersion;
+        newHistorical.setStartValidityDate(endValidityDate);
+        newHistorical.setEndValidityDate(null);
+        newVersion.setInsertionUser(null);
+        newVersion.setInsertionDate(null);
+        newVersion.setLastModifiedUser(null);
+        newVersion.setLastModifiedDate(null);
+        ///Make sure to use user in context...
+        mapper.addExtraEntityData(newVersion);
+        requireBusinessKeyUnchanged(businessKey, newVersion.getBusinessKey());
+
+        repository.persist(newVersion);
+        return newVersion;
+    }
+
+    private ENTITY requireCurrentByBusinessKey(String businessKey) {
+        requireBusinessKey(businessKey);
+        return repository.findCurrentByBusinessKey(businessKey)
+                .orElseThrow(() -> new CustomException(Response.Status.NOT_FOUND,
+                        EntityMessages.EM_ENTITY_NOT_FOUND_WITH_BUSINESS_KEY + businessKey));
+    }
+
+    private void requireBusinessKey(String businessKey) {
+        if (StringUtils.isBlank(businessKey)) {
+            throw new CustomException(Response.Status.BAD_REQUEST, EntityMessages.EM_BUSINESS_KEY_REQUIRED);
+        }
+    }
+
+    /**
+     * Uniqueness is enforced here, inside the transaction. Note that a transaction gives atomicity,
+     * not uniqueness: under true concurrency two callers can both pass this check. For a hard
+     * guarantee add a unique index: on MongoDB call
+     * {@code repository.ensureBusinessKeyUniqueIndex()} at startup (or create it from a script);
+     * on SQL create a partial unique index in your migration, as the syntax is dialect specific.
+     */
+    private void requireBusinessKeyAvailable(String businessKey) {
+        requireBusinessKey(businessKey);
+        if (repository.countCurrentByBusinessKey(businessKey) > 0) {
+            throw new CustomException(Response.Status.CONFLICT, EntityMessages.EM_BUSINESS_KEY_DUPLICATED + businessKey);
+        }
+    }
+
+    private void requireBusinessKeyUnchanged(String expected, String actual) {
+        if (!Objects.equals(expected, actual)) {
+            throw new CustomException(Response.Status.CONFLICT, EntityMessages.EM_BUSINESS_KEY_IMMUTABLE + expected);
+        }
     }
 
     public <T> List<T> aggregate(List<FieldPair> groupBy, List<FieldMap> aggregateBy, String elementField, String unwindFields, FindDTO findDTO, Class<T> clazz) {

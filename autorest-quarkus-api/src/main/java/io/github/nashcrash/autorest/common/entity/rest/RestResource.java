@@ -14,6 +14,10 @@ public interface RestResource<DTO> {
     DTO getById(@PathParam("id") String id);
 
     @GET
+    @Path("/businessKey/{businessKey}")
+    DTO getByBusinessKey(@PathParam("businessKey") String businessKey);
+
+    @GET
     List<DTO> search(@QueryParam("query") String query,
                      @QueryParam("orderBy") String[] orderBy,
                      @QueryParam("orderDirection") String[] orderDirection,
@@ -39,6 +43,6 @@ public interface RestResource<DTO> {
     DTO patch(@Valid DTO dto);
 
     @DELETE
-    @Path("/{id}")
-    void deleteById(@PathParam("id") String id);
+    @Path("/businessKey/{businessKey}")
+    void deleteByBusinessKey(@PathParam("businessKey") String businessKey);
 }

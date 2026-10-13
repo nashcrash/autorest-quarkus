@@ -33,6 +33,15 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
     }
 
     @GET
+    @Path("/businessKey/{businessKey}")
+    @Operation(
+            summary = "Get a resource by business key: the current version of a historical entity"
+    )
+    public DTO getByBusinessKey(@PathParam("businessKey") String businessKey) {
+        return service.findByBusinessKey(businessKey);
+    }
+
+    @GET
     @Operation(
             summary = "Search resources with filtering and pagination"
     )
@@ -106,11 +115,11 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
     }
 
     @DELETE
-    @Path("/{id}")
+    @Path("/businessKey/{businessKey}")
     @Operation(
-            summary = "Delete a resource by ID"
+            summary = "Delete a resource by business key: a historical entity is closed, not removed"
     )
-    public void deleteById(@PathParam("id") String id) {
-        service.deleteById(id);
+    public void deleteByBusinessKey(@PathParam("businessKey") String businessKey) {
+        service.deleteByBusinessKey(businessKey);
     }
 }

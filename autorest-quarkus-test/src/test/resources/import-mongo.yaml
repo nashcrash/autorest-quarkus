@@ -1,8 +1,12 @@
 database: test
 
+# The technical _id is a ULID-like opaque value, while businessKey is the stable reference.
+# Both entities declare businessKeyFields = {"eventCode"}, so the business key is Base64(eventCode):
+#   100055 -> MTAwMDU1, 100080 -> MTAwMDgw
 collections:
   entity:
     - _id: "MTAwMDU1"
+      businessKey: "MTAwMDU1"
       insertionUser: "TEST"
       lastModifiedUser: "TEST"
       eventCode: "100055"
@@ -17,6 +21,7 @@ collections:
           description: "Label 987"
 
     - _id: "MTAwMDgw"
+      businessKey: "MTAwMDgw"
       insertionUser: "TEST"
       lastModifiedUser: "TEST"
       eventCode: "100080"
@@ -29,8 +34,41 @@ collections:
           description: "Label 456"
         - code: "789"
           description: "Label 789"
+  # Historical entity: businessKeyFields = {"code"}, so businessKey is Base64(code)
+  #   H01 -> SDAx (open version), H02 -> SDAy (already closed), H04 -> SDA0 (open)
+  # ISO-8601 strings are imported as BSON dates by MongoImportLoader, which is what lets an
+  # Instant field be read back.
+  historical_entity:
+    - _id: "HV1"
+      businessKey: "SDAx"
+      insertionUser: "TEST"
+      lastModifiedUser: "TEST"
+      code: "H01"
+      description: "first"
+      value: 1.0
+      startValidityDate: "2026-01-01T00:00:00Z"
+
+    - _id: "HV0"
+      businessKey: "SDAy"
+      insertionUser: "TEST"
+      lastModifiedUser: "TEST"
+      code: "H02"
+      description: "closed"
+      value: 2.0
+      startValidityDate: "2026-01-01T00:00:00Z"
+      endValidityDate: "2026-02-01T00:00:00Z"
+
+    - _id: "HV2"
+      businessKey: "SDA0"
+      insertionUser: "TEST"
+      lastModifiedUser: "TEST"
+      code: "H04"
+      description: "key-change-probe"
+      value: 4.0
+      startValidityDate: "2026-01-01T00:00:00Z"
   internal_entity:
     - _id: "MTAwMDU1"
+      businessKey: "MTAwMDU1"
       insertionUser: "TEST"
       lastModifiedUser: "TEST"
       eventCode: "100055"
@@ -38,6 +76,7 @@ collections:
       value: 12.35
 
     - _id: "MTAwMDgw"
+      businessKey: "MTAwMDgw"
       insertionUser: "TEST"
       lastModifiedUser: "TEST"
       eventCode: "100080"

@@ -38,7 +38,10 @@ public class AutoServiceGenerator {
                 .addAnnotation(ClassName.get("lombok.extern.slf4j", "Slf4j"))
                 .addAnnotation(genericRestApiDTO.getGeneratedAnnotationSpec())
                 .addAnnotation(ClassName.get("jakarta.enterprise.context", "ApplicationScoped"));
-        if (dbType == DatabaseType.SQL) {
+        // JTA only applies to the blocking stack: a reactive service manages its own transaction
+        // through Panache.withTransaction, and a JTA interceptor around Uni-returning methods
+        // would block the event loop without ever opening a reactive session.
+        if (dbType == DatabaseType.SQL && !isReactive) {
             serviceClass.addAnnotation(ClassName.get("jakarta.transaction", "Transactional"));
         }
 

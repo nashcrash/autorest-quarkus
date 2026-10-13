@@ -24,20 +24,23 @@ public @interface ResourceAPI {
     Class<? extends AbstractDTO> dto();
 
     /**
-     * For NOSQL database, use a hash of the specified fields, such as technical id
+     * Business fields the business key is derived from, as a hash of their values.
+     * When left empty, the business key is generated once, at creation, as a random ULID.
+     * It never feeds the technical id, which is always generated per version.
      */
-    String[] idFields() default {};
+    String[] businessKeyFields() default {};
 
     /**
-     * Configure classes to generate
+     * Configure classes to generate.
+     * The REST client is not listed here: it is generated if and only if the entity
+     * is also annotated with {@link ResourceClient}.
      */
     @interface ClassesToGenerate {
         boolean resource() default true;
         boolean service() default true;
         boolean mapper() default true;
         boolean repository() default true;
-        boolean client() default true;
     }
 
-    ResourceAPI.ClassesToGenerate generate() default @ResourceAPI.ClassesToGenerate(resource = true, service = true, mapper = true, repository = true, client = true);
+    ResourceAPI.ClassesToGenerate generate() default @ResourceAPI.ClassesToGenerate(resource = true, service = true, mapper = true, repository = true);
 }

@@ -156,10 +156,10 @@ public class AutoRestProcessor extends AbstractProcessor {
                 .databaseType(databaseType)
                 .isReactive(isReactive)
                 .hasConsumer(hasConsumer)
-                .idFields(getIdFieldsSafe(entityElement))
+                .businessKeyFields(getBusinessKeyFieldsSafe(entityElement))
                 .generatedAnnotationSpec(getGeneratedAnnotation())
                 .aggregate(aggregateDTOS)
-                .isResourceClient((resourceClient != null || annotation.generate().client()))
+                .isResourceClient(resourceClient != null)
                 .isResource(annotation.generate().resource())
                 .isService(annotation.generate().service())
                 .isMapper(annotation.generate().mapper())
@@ -249,12 +249,16 @@ public class AutoRestProcessor extends AbstractProcessor {
         }
     }
 
-    //Non funziona
-    private List<String> getIdFieldsSafe(TypeElement element) {
+    /**
+     * Reads ResourceAPI#businessKeyFields through the annotation mirrors: reading it from the
+     * annotation instance would not work, because the value is an array of Strings.
+     * Only explicitly declared values are returned, so an undeclared attribute yields an empty list.
+     */
+    private List<String> getBusinessKeyFieldsSafe(TypeElement element) {
         return element.getAnnotationMirrors().stream()
                 .filter(am -> am.getAnnotationType().toString().endsWith("ResourceAPI"))
                 .flatMap(am -> am.getElementValues().entrySet().stream())
-                .filter(e -> e.getKey().getSimpleName().toString().equals("idFields"))
+                .filter(e -> e.getKey().getSimpleName().toString().equals("businessKeyFields"))
                 .map(e -> (List<?>) e.getValue().getValue())
                 .flatMap(List::stream)
                 .map(av -> av.toString().replaceAll("^\"|\"$", "")).toList();

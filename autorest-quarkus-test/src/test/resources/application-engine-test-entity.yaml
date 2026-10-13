@@ -4,6 +4,7 @@ constant:
     entity-base-path: /entity
     test-data:
       id: MTAwMDU1
+      business-key: MTAwMDU1
       expected-get: "testdata/entity/expected_get.json"
       expected-find: "testdata/entity/expected_find.json"
       expected-create: "testdata/entity/expected_create.json"
@@ -47,9 +48,19 @@ entity-test:
       body: '{"id":"MTAwMDU1","eventCode":"100055","value":12.36}'
       expected-status: 200
       expected-file-body: ${constant.entity.test-data.expected-patch}
+    - name: get-by-business-key-${constant.entity.entity-name}-ok
+      type: GET
+      url: ${constant.rootPath}${constant.entity.entity-base-path}/businessKey/${constant.entity.test-data.business-key}
+      expected-status: 200
+      expected-file-body: ${constant.entity.test-data.expected-patch}
     - name: delete-${constant.entity.entity-name}-ok
       type: DELETE
       headers: x-custom-username=TEST
-      url: ${constant.rootPath}${constant.entity.entity-base-path}/${constant.entity.test-data.id}
+      url: ${constant.rootPath}${constant.entity.entity-base-path}/businessKey/${constant.entity.test-data.business-key}
       expected-status: 204
+    - name: delete-${constant.entity.entity-name}-unknown-business-key
+      type: DELETE
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.entity.entity-base-path}/businessKey/UNKNOWN
+      expected-status: 404
     #CUSTOM TEST

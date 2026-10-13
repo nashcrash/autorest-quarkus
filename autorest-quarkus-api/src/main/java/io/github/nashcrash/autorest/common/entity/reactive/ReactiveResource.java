@@ -15,6 +15,10 @@ public interface ReactiveResource<DTO> {
     Uni<DTO> getById(@PathParam("id") String id);
 
     @GET
+    @Path("/businessKey/{businessKey}")
+    Uni<DTO> getByBusinessKey(@PathParam("businessKey") String businessKey);
+
+    @GET
     Uni<List<DTO>> search(@QueryParam("query") String query,
                           @QueryParam("orderBy") String[] orderBy,
                           @QueryParam("orderDirection") String[] orderDirection,
@@ -40,6 +44,6 @@ public interface ReactiveResource<DTO> {
     Uni<DTO> patch(@Valid DTO dto);
 
     @DELETE
-    @Path("/{id}")
-    Uni<Void> deleteById(@PathParam("id") String id);
+    @Path("/businessKey/{businessKey}")
+    Uni<Void> deleteByBusinessKey(@PathParam("businessKey") String businessKey);
 }

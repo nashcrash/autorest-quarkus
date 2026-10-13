@@ -176,12 +176,37 @@ public class QueryBuilder {
         return this;
     }
 
+    /**
+     * Selects the version that was valid at the given reference instant/date, on the
+     * {@code [startValidityDate, endValidityDate)} convention used when historizing:
+     * {@code startField <= reference AND (endField > reference OR endField IS NULL)}.
+     * <p>
+     * Note this is "valid at a date", not "the open version": a version closed with a future
+     * endValidityDate also matches. Use {@link #andLastVersion(String)} for the open one.
+     */
     public <T> QueryBuilder andHistoricalReference(String startField, String endField, T referenceValue) {
         return this.andLte(startField, referenceValue)
                 .or(
-                        new QueryBuilder(this.type).andGt(endField, referenceValue),
-                        new QueryBuilder(this.type).andIsNull(endField)
+                        subBuilder().andGt(endField, referenceValue),
+                        subBuilder().andIsNull(endField)
                 );
+    }
+
+    /**
+     * Selects the last version of a historical entity, i.e. the open one: {@code endField IS NULL}.
+     */
+    public QueryBuilder andLastVersion(String endField) {
+        return this.andIsNull(endField);
+    }
+
+    /**
+     * A nested builder for the same dialect, carrying over the configured formatters so that both
+     * halves of a temporal predicate render values identically.
+     */
+    private QueryBuilder subBuilder() {
+        return new QueryBuilder(this.type)
+                .withDateFormatter(this.dateFormatter)
+                .withDateTimeFormatter(this.dateTimeFormatter);
     }
 
     public <T> QueryBuilder andNotBetween(String field, T valueFrom, T valueTo) {

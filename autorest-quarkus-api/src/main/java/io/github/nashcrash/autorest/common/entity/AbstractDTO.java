@@ -15,6 +15,11 @@ import java.time.Instant;
 @SuperBuilder(toBuilder = true)
 public abstract class AbstractDTO {
     private String id;
+    /**
+     * Stable identifier of the entity over time, shared by every version of a historical entity.
+     * Use it to reference the entity; the id identifies a single version.
+     */
+    private String businessKey;
     private String insertionUser;
     private String lastModifiedUser;
     private Instant insertionDate;

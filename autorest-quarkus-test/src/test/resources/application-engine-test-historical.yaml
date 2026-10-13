@@ -1,0 +1,129 @@
+constant:
+  historical:
+    base-path: /historical_entity
+    test-data:
+      # businessKey = Base64(code): H01 -> SDAx, H02 -> SDAy, H04 -> SDA0
+      open-id: HV1
+      open-business-key: SDAx
+      closed-id: HV0
+      key-change-id: HV2
+
+# Cases run in file order and share state, so the sequence matters:
+# the entity SDAx is read, patched (new version), upserted (another version),
+# then listed in full and finally closed.
+historical-entity-test:
+  cases:
+    #READ THE CURRENT VERSION
+    - name: get-historical-current-by-business-key-ok
+      type: GET
+      url: ${constant.rootPath}${constant.historical.base-path}/businessKey/${constant.historical.test-data.open-business-key}
+      expected-status: 200
+      expected-body: '{"id":"HV1","businessKey":"SDAx","code":"H01","description":"first","value":1.0,"endValidityDate":null}'
+
+    #PATCH BY ID: closes the targeted version and inserts a new open one, same business key
+    - name: patch-historical-creates-new-version
+      type: PATCH
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.historical.base-path}
+      content-type: application/json
+      body: '{"id":"HV1","code":"H01","description":"second"}'
+      expected-status: 200
+      expected-body: '{"businessKey":"SDAx","code":"H01","description":"second","value":1.0,"endValidityDate":null}'
+
+    # The old version is still addressable by its own id, and is now closed:
+    # proof that the new version got a different technical id while keeping the business key.
+    - name: get-historical-closed-version-by-id
+      type: GET
+      url: ${constant.rootPath}${constant.historical.base-path}/${constant.historical.test-data.open-id}
+      expected-status: 200
+      expected-body: '{"id":"HV1","businessKey":"SDAx","description":"first"}'
+
+    - name: get-historical-current-after-patch
+      type: GET
+      url: ${constant.rootPath}${constant.historical.base-path}/businessKey/${constant.historical.test-data.open-business-key}
+      expected-status: 200
+      expected-body: '{"businessKey":"SDAx","description":"second","endValidityDate":null}'
+
+    #PATCH ON AN ALREADY CLOSED VERSION -> 409
+    - name: patch-historical-on-closed-version-conflict
+      type: PATCH
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.historical.base-path}
+      content-type: application/json
+      body: '{"id":"HV0","code":"H02","description":"nope"}'
+      expected-status: 409
+
+    #CHANGING A BUSINESS KEY FIELD -> 409 (the business key is immutable)
+    - name: patch-historical-changing-key-field-conflict
+      type: PATCH
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.historical.base-path}
+      content-type: application/json
+      body: '{"id":"HV2","code":"CHANGED","description":"key-change-probe"}'
+      expected-status: 409
+
+    #DUPLICATED BUSINESS KEY ON CREATE -> 409 (SDAx already has an open version)
+    - name: create-historical-duplicated-business-key-conflict
+      type: POST
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.historical.base-path}
+      content-type: application/json
+      body: '{"code":"H01","description":"duplicate","value":9.9}'
+      expected-status: 409
+
+    - name: create-historical-ok
+      type: POST
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.historical.base-path}
+      content-type: application/json
+      body: '{"code":"H05","description":"brand-new","value":5.0}'
+      expected-status: 201
+      expected-body: '{"businessKey":"SDA1","code":"H05","description":"brand-new","endValidityDate":null}'
+
+    #UPSERT RESOLVES BY BUSINESS KEY AND HISTORIZES AGAIN
+    - name: upsert-historical-creates-new-version
+      type: PUT
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.historical.base-path}
+      content-type: application/json
+      body: '{"code":"H01","description":"third"}'
+      expected-status: 200
+      expected-body: '{"businessKey":"SDAx","code":"H01","description":"third","endValidityDate":null}'
+
+    # The full history of one entity: find by business key returns every version.
+    # Ordered by startValidityDate so the sequence is deterministic.
+    - name: find-historical-all-versions-of-one-entity
+      type: POST
+      url: ${constant.rootPath}${constant.historical.base-path}/find
+      content-type: application/json
+      body: '{"query":"{''businessKey'': ''SDAx''}","orderBy":["startValidityDate"],"orderDirection":["ASC"]}'
+      expected-status: 200
+      expected-body: '[{"businessKey":"SDAx","description":"first"},{"businessKey":"SDAx","description":"second"},{"businessKey":"SDAx","description":"third"}]'
+
+    #DELETE BY BUSINESS KEY: logical close, the history stays
+    - name: delete-historical-by-business-key-ok
+      type: DELETE
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.historical.base-path}/businessKey/${constant.historical.test-data.open-business-key}
+      expected-status: 204
+
+    - name: get-historical-after-close-not-found
+      type: GET
+      url: ${constant.rootPath}${constant.historical.base-path}/businessKey/${constant.historical.test-data.open-business-key}
+      expected-status: 404
+
+    # Closing is logical: every version is still there, now all closed
+    - name: find-historical-versions-after-close
+      type: POST
+      url: ${constant.rootPath}${constant.historical.base-path}/find
+      content-type: application/json
+      body: '{"query":"{''businessKey'': ''SDAx''}","orderBy":["startValidityDate"],"orderDirection":["ASC"]}'
+      expected-status: 200
+      expected-body: '[{"description":"first"},{"description":"second"},{"description":"third"}]'
+
+    - name: delete-historical-unknown-business-key-not-found
+      type: DELETE
+      headers: x-custom-username=TEST
+      url: ${constant.rootPath}${constant.historical.base-path}/businessKey/UNKNOWN
+      expected-status: 404
+    #CUSTOM TEST
