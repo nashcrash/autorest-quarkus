@@ -4,9 +4,15 @@ import io.github.nashcrash.autorest.common.entity.AbstractDTO;
 import io.github.nashcrash.autorest.common.entity.AbstractEntity;
 import io.github.nashcrash.autorest.common.entity.FindDTO;
 import io.github.nashcrash.autorest.common.entity.ResultDTO;
+import io.github.nashcrash.autorest.common.validator.groups.FindValidator;
+import io.github.nashcrash.autorest.common.validator.groups.PatchValidator;
+import io.github.nashcrash.autorest.common.validator.groups.PostValidator;
+import io.github.nashcrash.autorest.common.validator.groups.PutValidator;
 import io.smallrye.common.annotation.Blocking;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.groups.ConvertGroup;
+import jakarta.validation.groups.Default;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +64,7 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
     @Operation(
             summary = "Search resources with filtering and pagination"
     )
-    public List<DTO> find(@Valid FindDTO dto) {
+    public List<DTO> find(@Valid @ConvertGroup(from = Default.class, to = FindValidator.class) FindDTO dto) {
         return service.search(dto);
     }
 
@@ -67,7 +73,7 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
     @Operation(
             summary = "Search resources with filtering and pagination with totalCount"
     )
-    public ResultDTO<DTO> findAndCount(@Valid FindDTO dto) {
+    public ResultDTO<DTO> findAndCount(@Valid @ConvertGroup(from = Default.class, to = FindValidator.class) FindDTO dto) {
         ResultDTO<DTO> result = new ResultDTO<>();
         result.setTotalCount(service.count(dto));
         result.setElements(service.search(dto));
@@ -85,7 +91,7 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
             description = "Resource created successfully"
     )
     @ResponseStatus(201)
-    public DTO create(@Valid DTO dto) {
+    public DTO create(@Valid @ConvertGroup(from = Default.class, to = PostValidator.class) DTO dto) {
         return service.create(dto);
     }
 
@@ -97,7 +103,7 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
             responseCode = "200",
             description = "Resource updated successfully"
     )
-    public DTO upsert(@Valid DTO dto) {
+    public DTO upsert(@Valid @ConvertGroup(from = Default.class, to = PutValidator.class) DTO dto) {
         return service.upsert(dto);
     }
 
@@ -110,7 +116,7 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
             responseCode = "200",
             description = "Resource updated successfully"
     )
-    public DTO patch(@Valid DTO dto) {
+    public DTO patch(@Valid @ConvertGroup(from = Default.class, to = PatchValidator.class) DTO dto) {
         return service.patch(dto);
     }
 

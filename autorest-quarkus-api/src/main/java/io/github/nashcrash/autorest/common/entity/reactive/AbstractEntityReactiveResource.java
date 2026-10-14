@@ -4,10 +4,16 @@ import io.github.nashcrash.autorest.common.entity.AbstractDTO;
 import io.github.nashcrash.autorest.common.entity.AbstractEntity;
 import io.github.nashcrash.autorest.common.entity.FindDTO;
 import io.github.nashcrash.autorest.common.entity.ResultDTO;
+import io.github.nashcrash.autorest.common.validator.groups.FindValidator;
+import io.github.nashcrash.autorest.common.validator.groups.PatchValidator;
+import io.github.nashcrash.autorest.common.validator.groups.PostValidator;
+import io.github.nashcrash.autorest.common.validator.groups.PutValidator;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.groups.ConvertGroup;
+import jakarta.validation.groups.Default;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +65,7 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
     @Operation(
             summary = "Search resources with filtering and pagination"
     )
-    public Uni<List<DTO>> find(@Valid FindDTO dto) {
+    public Uni<List<DTO>> find(@Valid @ConvertGroup(from = Default.class, to = FindValidator.class) FindDTO dto) {
         return service.search(dto);
     }
 
@@ -68,7 +74,7 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
     @Operation(
             summary = "Search resources with filtering and pagination with totalCount"
     )
-    public Uni<ResultDTO<DTO>> findAndCount(@Valid FindDTO dto) {
+    public Uni<ResultDTO<DTO>> findAndCount(@Valid @ConvertGroup(from = Default.class, to = FindValidator.class) FindDTO dto) {
         return Uni.combine().all().unis(
                         service.search(dto),
                         service.count(dto)
@@ -92,7 +98,7 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
             description = "Resource created successfully"
     )
     @ResponseStatus(201)
-    public Uni<DTO> create(@Valid DTO dto) {
+    public Uni<DTO> create(@Valid @ConvertGroup(from = Default.class, to = PostValidator.class) DTO dto) {
         return service.create(dto);
     }
 
@@ -104,7 +110,7 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
             responseCode = "200",
             description = "Resource updated successfully"
     )
-    public Uni<DTO> upsert(@Valid DTO dto) {
+    public Uni<DTO> upsert(@Valid @ConvertGroup(from = Default.class, to = PutValidator.class) DTO dto) {
         return service.upsert(dto);
     }
 
@@ -117,7 +123,7 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
             responseCode = "200",
             description = "Resource updated successfully"
     )
-    public Uni<DTO> patch(@Valid DTO dto) {
+    public Uni<DTO> patch(@Valid @ConvertGroup(from = Default.class, to = PatchValidator.class) DTO dto) {
         return service.patch(dto);
     }
 
