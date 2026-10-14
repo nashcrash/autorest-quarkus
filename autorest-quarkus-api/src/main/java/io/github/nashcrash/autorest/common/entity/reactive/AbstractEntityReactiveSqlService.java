@@ -3,6 +3,7 @@ package io.github.nashcrash.autorest.common.entity.reactive;
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
+import io.github.nashcrash.autorest.common.util.SortUtils;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
@@ -39,13 +40,18 @@ public abstract class AbstractEntityReactiveSqlService<ENTITY extends AbstractEn
 
     public Uni<DTO> create(DTO dto) {
         ENTITY entity = mapper.toEntity(dto);
-        return Panache.withTransaction(() -> requireBusinessKeyAvailable(entity.getBusinessKey())
+        if (dto.getId()!=null) {
+            return Uni.createFrom().failure(new CustomException(Response.Status.BAD_REQUEST, EntityMessages.EM_ENTITY_ID_MUST_BE_NULL));
+        }
+        return Panache.withTransaction(
+                () -> requireBusinessKeyAvailable(entity.getBusinessKey())
                 .chain(() -> repository.persist(entity))
-                .replaceWith(() -> mapper.toDto(entity)));
+                .replaceWith(() -> mapper.toDto(entity))
+        );
     }
 
     public Uni<List<DTO>> search(FindDTO findDTO) {
-        Sort sort = PipelineUtils.getSort(findDTO);
+        Sort sort = SortUtils.getSort(findDTO);
         PanacheQuery<ENTITY> eventoReactivePanacheQuery;
         if (StringUtils.isNotBlank(findDTO.getQuery())) {
             eventoReactivePanacheQuery = repository.find(findDTO.getQuery(), sort);

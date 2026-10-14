@@ -5,8 +5,10 @@ import com.mongodb.client.AggregateIterable;
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
 import io.github.nashcrash.autorest.common.util.PipelineUtils;
+import io.github.nashcrash.autorest.common.util.SortUtils;
 import io.quarkus.mongodb.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
@@ -50,13 +52,16 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
     @Transactional
     public DTO create(DTO dto) {
         ENTITY entity = mapper.toEntity(dto);
+        if (dto.getId()!=null) {
+            throw new CustomException(Response.Status.BAD_REQUEST, EntityMessages.EM_ENTITY_ID_MUST_BE_NULL);
+        }
         requireBusinessKeyAvailable(entity.getBusinessKey());
         repository.persist(entity);
         return mapper.toDto(entity);
     }
 
     public List<DTO> search(FindDTO findDTO) {
-        Sort sort = PipelineUtils.getSort(findDTO);
+        Sort sort = SortUtils.getSort(findDTO);
         PanacheQuery<ENTITY> entityPanacheQuery;
         if (StringUtils.isNotBlank(findDTO.getQuery())) {
             entityPanacheQuery = repository.find(findDTO.getQuery(), sort);

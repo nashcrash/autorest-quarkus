@@ -14,6 +14,7 @@ public final class EntityMessages {
     public static final String EM_BUSINESS_KEY_REQUIRED = "Business key is required";
     public static final String EM_INVALID_ID = "Invalid id: ";
     public static final String EM_AGGREGATE_NOT_SUPPORTED = "Aggregations are supported on MongoDB entities only";
+    public static final String EM_ENTITY_ID_MUST_BE_NULL = "Entity id must be null";
 
     private EntityMessages() {
     }
