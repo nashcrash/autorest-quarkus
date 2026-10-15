@@ -98,7 +98,8 @@ public class AutoClientGenerator {
     private boolean shouldCopyAnnotation(AnnotationMirror annotation) {
         String name = ((TypeElement) annotation.getAnnotationType().asElement()).getQualifiedName().toString();
         return !name.startsWith("io.smallrye.common.annotation.")
-                && !name.startsWith("jakarta.validation.");
+                && !name.startsWith("jakarta.validation.")
+                && !name.startsWith("org.eclipse.microprofile.openapi.");
     }
 
     /**
