@@ -51,10 +51,10 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
 
     @Transactional
     public DTO create(DTO dto) {
-        ENTITY entity = mapper.toEntity(dto);
         if (dto.getId()!=null) {
             throw new CustomException(Response.Status.BAD_REQUEST, EntityMessages.EM_ENTITY_ID_MUST_BE_NULL);
         }
+        ENTITY entity = mapper.toEntity(dto);
         requireBusinessKeyAvailable(entity.getBusinessKey());
         repository.persist(entity);
         return mapper.toDto(entity);

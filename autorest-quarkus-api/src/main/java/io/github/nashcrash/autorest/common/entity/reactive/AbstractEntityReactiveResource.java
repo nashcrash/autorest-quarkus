@@ -4,21 +4,12 @@ import io.github.nashcrash.autorest.common.entity.AbstractDTO;
 import io.github.nashcrash.autorest.common.entity.AbstractEntity;
 import io.github.nashcrash.autorest.common.entity.FindDTO;
 import io.github.nashcrash.autorest.common.entity.ResultDTO;
-import io.github.nashcrash.autorest.common.validator.groups.FindValidator;
-import io.github.nashcrash.autorest.common.validator.groups.PatchValidator;
-import io.github.nashcrash.autorest.common.validator.groups.PostValidator;
-import io.github.nashcrash.autorest.common.validator.groups.PutValidator;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.reactive.messaging.annotations.Blocking;
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
-import jakarta.validation.groups.ConvertGroup;
-import jakarta.validation.groups.Default;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.jboss.resteasy.reactive.ResponseStatus;
 
 import java.util.List;
@@ -30,51 +21,27 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
     @Inject
     protected AbstractEntityReactiveService<ENTITY, DTO> service;
 
-    @GET
-    @Path("/{id}")
-    @Operation(
-            summary = "Get a resource by ID"
-    )
-    public Uni<DTO> getById(@PathParam("id") String id) {
+    public Uni<DTO> getById(String id) {
         return service.findById(id);
     }
 
-    @GET
-    @Path("/businessKey/{businessKey}")
-    @Operation(
-            summary = "Get a resource by business key: the current version of a historical entity"
-    )
-    public Uni<DTO> getByBusinessKey(@PathParam("businessKey") String businessKey) {
+    public Uni<DTO> getByBusinessKey(String businessKey) {
         return service.findByBusinessKey(businessKey);
     }
 
-    @GET
-    @Operation(
-            summary = "Search resources with filtering and pagination"
-    )
-    public Uni<List<DTO>> search(@QueryParam("query") String query,
-                                 @QueryParam("orderBy") String[] orderBy,
-                                 @QueryParam("orderDirection") String[] orderDirection,
-                                 @QueryParam("page") int page,
-                                 @QueryParam("limit") int limit) {
+    public Uni<List<DTO>> search(String query,
+                                 String[] orderBy,
+                                 String[] orderDirection,
+                                 int page,
+                                 int limit) {
         return service.search(FindDTO.builder().query(query).orderBy(orderBy).orderDirection(orderDirection).page(page).limit(limit).build());
     }
 
-    @POST
-    @Path("/find")
-    @Operation(
-            summary = "Search resources with filtering and pagination"
-    )
-    public Uni<List<DTO>> find(@Valid @ConvertGroup(from = Default.class, to = FindValidator.class) FindDTO dto) {
+    public Uni<List<DTO>> find(FindDTO dto) {
         return service.search(dto);
     }
 
-    @POST
-    @Path("/findAndCount")
-    @Operation(
-            summary = "Search resources with filtering and pagination with totalCount"
-    )
-    public Uni<ResultDTO<DTO>> findAndCount(@Valid @ConvertGroup(from = Default.class, to = FindValidator.class) FindDTO dto) {
+    public Uni<ResultDTO<DTO>> findAndCount(FindDTO dto) {
         return Uni.combine().all().unis(
                         service.search(dto),
                         service.count(dto)
@@ -89,50 +56,20 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
                 });
     }
 
-    @POST
-    @Operation(
-            summary = "Create a new resource"
-    )
-    @APIResponse(
-            responseCode = "201",
-            description = "Resource created successfully"
-    )
     @ResponseStatus(201)
-    public Uni<DTO> create(@Valid @ConvertGroup(from = Default.class, to = PostValidator.class) DTO dto) {
+    public Uni<DTO> create(DTO dto) {
         return service.create(dto);
     }
 
-    @PUT
-    @Operation(
-            summary = "Upsert a resource"
-    )
-    @APIResponse(
-            responseCode = "200",
-            description = "Resource updated successfully"
-    )
-    public Uni<DTO> upsert(@Valid @ConvertGroup(from = Default.class, to = PutValidator.class) DTO dto) {
+    public Uni<DTO> upsert(DTO dto) {
         return service.upsert(dto);
     }
 
-    @PATCH
-    @Blocking
-    @Operation(
-            summary = "Update only an existing resource, ignoring null fields"
-    )
-    @APIResponse(
-            responseCode = "200",
-            description = "Resource updated successfully"
-    )
-    public Uni<DTO> patch(@Valid @ConvertGroup(from = Default.class, to = PatchValidator.class) DTO dto) {
+    public Uni<DTO> patch(DTO dto) {
         return service.patch(dto);
     }
 
-    @DELETE
-    @Path("/businessKey/{businessKey}")
-    @Operation(
-            summary = "Delete a resource by business key: a historical entity is closed, not removed"
-    )
-    public Uni<Void> deleteByBusinessKey(@PathParam("businessKey") String businessKey) {
+    public Uni<Void> deleteByBusinessKey(String businessKey) {
         return service.deleteByBusinessKey(businessKey);
     }
 }

@@ -47,10 +47,10 @@ public abstract class AbstractEntityReactiveMongoService<ENTITY extends Abstract
     }
 
     public Uni<DTO> create(DTO dto) {
-        ENTITY entity = mapper.toEntity(dto);
         if (dto.getId()!=null) {
             return Uni.createFrom().failure(new CustomException(Response.Status.BAD_REQUEST, EntityMessages.EM_ENTITY_ID_MUST_BE_NULL));
         }
+        ENTITY entity = mapper.toEntity(dto);
         return Panache.withTransaction(() -> requireBusinessKeyAvailable(entity.getBusinessKey())
                 .chain(() -> repository.persist(entity))
                 .replaceWith(() -> mapper.toDto(entity)));

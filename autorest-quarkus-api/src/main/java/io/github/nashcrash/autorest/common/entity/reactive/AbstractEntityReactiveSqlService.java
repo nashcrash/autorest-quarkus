@@ -39,10 +39,10 @@ public abstract class AbstractEntityReactiveSqlService<ENTITY extends AbstractEn
     }
 
     public Uni<DTO> create(DTO dto) {
-        ENTITY entity = mapper.toEntity(dto);
         if (dto.getId()!=null) {
             return Uni.createFrom().failure(new CustomException(Response.Status.BAD_REQUEST, EntityMessages.EM_ENTITY_ID_MUST_BE_NULL));
         }
+        ENTITY entity = mapper.toEntity(dto);
         return Panache.withTransaction(
                 () -> requireBusinessKeyAvailable(entity.getBusinessKey())
                 .chain(() -> repository.persist(entity))
@@ -81,6 +81,7 @@ public abstract class AbstractEntityReactiveSqlService<ENTITY extends AbstractEn
                 .chain(() -> repository.findCurrentByBusinessKey(businessKey))
                 .onItem().transformToUni(current -> {
                     if (current == null) {
+                        clearIdentity(mapped);
                         return repository.persist(mapped).replaceWith(() -> mapper.toDto(mapped));
                     }
                     if (current instanceof AbstractEntityHistorical && dto instanceof AbstractHistoricalDTO historicalDTO) {

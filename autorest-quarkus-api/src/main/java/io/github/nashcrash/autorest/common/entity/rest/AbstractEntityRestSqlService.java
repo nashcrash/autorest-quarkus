@@ -38,10 +38,10 @@ public abstract class AbstractEntityRestSqlService<ENTITY extends AbstractEntity
 
     @Transactional
     public DTO create(DTO dto) {
-        ENTITY entity = mapper.toEntity(dto);
         if (dto.getId()!=null) {
             throw new CustomException(Response.Status.BAD_REQUEST, EntityMessages.EM_ENTITY_ID_MUST_BE_NULL);
         }
+        ENTITY entity = mapper.toEntity(dto);
         requireBusinessKeyAvailable(entity.getBusinessKey());
         repository.persist(entity);
         return mapper.toDto(entity);
@@ -79,6 +79,7 @@ public abstract class AbstractEntityRestSqlService<ENTITY extends AbstractEntity
 
         ENTITY current = repository.findCurrentByBusinessKey(businessKey).orElse(null);
         if (current == null) {
+            clearIdentity(mapped);
             repository.persist(mapped);
             return mapper.toDto(mapped);
         }
