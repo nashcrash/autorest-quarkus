@@ -69,7 +69,9 @@ public class AutoClientGenerator {
                     ;
 
             for (AnnotationMirror ann : method.getAnnotationMirrors()) {
-                methodBuilder.addAnnotation(AnnotationSpec.get(ann));
+                if (shouldCopyAnnotation(ann)) {
+                    methodBuilder.addAnnotation(AnnotationSpec.get(ann));
+                }
             }
             methodBuilder.returns(replaceType(TypeName.get(method.getReturnType()), concreteDto));
 
@@ -81,7 +83,9 @@ public class AutoClientGenerator {
 
                 // Copiamo le annotazioni del parametro (@PathParam, @QueryParam, ecc.)
                 for (AnnotationMirror ann : param.getAnnotationMirrors()) {
-                    paramBuilder.addAnnotation(AnnotationSpec.get(ann));
+                    if (shouldCopyAnnotation(ann)) {
+                        paramBuilder.addAnnotation(AnnotationSpec.get(ann));
+                    }
                 }
                 methodBuilder.addParameter(paramBuilder.build());
             }
@@ -89,6 +93,12 @@ public class AutoClientGenerator {
             methods.add(methodBuilder.build());
         }
         return methods;
+    }
+
+    private boolean shouldCopyAnnotation(AnnotationMirror annotation) {
+        String name = ((TypeElement) annotation.getAnnotationType().asElement()).getQualifiedName().toString();
+        return !name.startsWith("io.smallrye.common.annotation.")
+                && !name.startsWith("jakarta.validation.");
     }
 
     /**
