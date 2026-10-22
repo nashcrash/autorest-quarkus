@@ -85,7 +85,7 @@ public class OrderDTO extends AbstractDTO {
 }
 ```
 
-At compile time the annotation processor generates `OrderRepository`, `OrderMapper`, `OrderService` and `OrderResource`, exposing a full CRUD API under `/orders` (create, get by id, get by business key, search/find with pagination and generic filtering, patch, upsert, delete by business key) — fully described in the generated OpenAPI/Swagger document.
+At compile time the annotation processor generates `OrderRepository`, `OrderMapper`, `OrderService` and `OrderResource`, exposing a full CRUD API under `/orders` (create, get and delete by id or by business key, search/find with pagination and generic filtering, patch by id or by business key, upsert) — fully described in the generated OpenAPI/Swagger document.
 
 Every entity carries two identifiers: the technical `id`, which identifies a single version, and the `businessKey`, which identifies the entity over time and is the reference other entities should store. Declare `@ResourceAPI(businessKeyFields = {"customerCode"})` to derive the business key from business fields; otherwise it is assigned once, at creation.
 

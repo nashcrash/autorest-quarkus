@@ -41,23 +41,23 @@ public class QueryBuilder {
         templateMongo.put("escape", "\"");
         templateMongo.put("and", ",");
         templateMongo.put("or", ",");
-        templateMongo.put("or_structure", "\"$or\": [ #value# ]");
-        templateMongo.put("eq", "#field#: #value#");
-        templateMongo.put("ne", "#field#: {$ne: #value#}");
-        templateMongo.put("in", "#field#: {$in: [#value#]}");
-        templateMongo.put("notin", "#field#: {$not: {$in: [#value#]}}");
-        templateMongo.put("lt", "#field#: {$lt: #value#}");
-        templateMongo.put("gt", "#field#: {$gt: #value#}");
-        templateMongo.put("lte", "#field#: {$lte: #value#}");
-        templateMongo.put("gte", "#field#: {$gte: #value#}");
-        templateMongo.put("isnull", "#field#: null");
-        templateMongo.put("isnotnull", "#field#: {$ne: null}");
-        templateMongo.put("between", "#field#: {$gte: #value#, $lte: #value2#}");
-        templateMongo.put("notbetween", "#field#: {$not: {$gte: #value#, $lte: #value2#}}");
-        templateMongo.put("match", "#field#: {$regex: #value#}");
-        templateMongo.put("match_insensitive", "#field#: {$regex: #value#, $options: \"i\"}");
-        templateMongo.put("notmatch", "#field#: {$not: {$regex: #value#}}");
-        templateMongo.put("notmatch_insensitive", "#field#: {$not: {$regex: #value#, $options: \"i\"}}");
+        templateMongo.put("or_structure", "{\"$or\": [ #value# ]}");
+        templateMongo.put("eq", "{#field#: #value#}");
+        templateMongo.put("ne", "{#field#: {$ne: #value#}}");
+        templateMongo.put("in", "{#field#: {$in: [#value#]}}");
+        templateMongo.put("notin", "{#field#: {$not: {$in: [#value#]}}}");
+        templateMongo.put("lt", "{#field#: {$lt: #value#}}");
+        templateMongo.put("gt", "{#field#: {$gt: #value#}}");
+        templateMongo.put("lte", "{#field#: {$lte: #value#}}");
+        templateMongo.put("gte", "{#field#: {$gte: #value#}}");
+        templateMongo.put("isnull", "{#field#: null}");
+        templateMongo.put("isnotnull", "{#field#: {$ne: null}}");
+        templateMongo.put("between", "{#field#: {$gte: #value#, $lte: #value2#}}");
+        templateMongo.put("notbetween", "{#field#: {$not: {$gte: #value#, $lte: #value2#}}}");
+        templateMongo.put("match", "{#field#: {$regex: #value#}}");
+        templateMongo.put("match_insensitive", "{#field#: {$regex: #value#, $options: \"i\"}}");
+        templateMongo.put("notmatch", "{#field#: {$not: {$regex: #value#}}}");
+        templateMongo.put("notmatch_insensitive", "{#field#: {$not: {$regex: #value#, $options: \"i\"}}}");
     }
 
     private String type;
@@ -226,7 +226,7 @@ public class QueryBuilder {
 
     public String build() {
         if ("mongo".equalsIgnoreCase(type)) {
-            return "{" + build(templateMongo) + "}";
+            return "{$and: [" + build(templateMongo) + "]}";
         }
         return build(templateSQL);
     }
