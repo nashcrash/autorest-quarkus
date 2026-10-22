@@ -47,7 +47,7 @@ public abstract class AbstractEntityReactiveMongoService<ENTITY extends Abstract
     }
 
     public Uni<DTO> create(DTO dto) {
-        if (dto.getId()!=null) {
+        if (dto.getId() != null) {
             return Uni.createFrom().failure(new CustomException(Response.Status.BAD_REQUEST, EntityMessages.EM_ENTITY_ID_MUST_BE_NULL));
         }
         ENTITY entity = mapper.toEntity(dto);
@@ -108,6 +108,26 @@ public abstract class AbstractEntityReactiveMongoService<ENTITY extends Abstract
                         if (historicalEntity.getEndValidityDate() != null) {
                             return Uni.createFrom().failure(new CustomException(Response.Status.CONFLICT,
                                     EntityMessages.EM_ENTITY_ALREADY_HISTORIZED_WITH_ID + dto.getId()));
+                        }
+                        return historize(entity, dto, historicalDTO.getEndValidityDate()).onItem().transform(mapper::toDto);
+                    }
+                    return applyInPlace(entity, dto).onItem().transform(mapper::toDto);
+                }));
+    }
+
+    /**
+     * Patches one specific version, identified by its businessKey. A historical entity is versioned:
+     * the targeted version is closed and a new open one is inserted, carrying the same business key.
+     */
+    public Uni<DTO> patchByBusinessKey(String businessKey, DTO dto) {
+        return Panache.withTransaction(() -> repository.findCurrentByBusinessKey(businessKey)
+                .onItem().ifNull().failWith(() -> new CustomException(Response.Status.NOT_FOUND, EntityMessages.EM_ENTITY_NOT_FOUND_WITH_BUSINESS_KEY + businessKey))
+                .onItem().transformToUni(entity -> {
+                    if (entity instanceof AbstractEntityHistorical historicalEntity && dto instanceof AbstractHistoricalDTO historicalDTO) {
+                        //If it is already historicized, there was a conflict....
+                        if (historicalEntity.getEndValidityDate() != null) {
+                            return Uni.createFrom().failure(new CustomException(Response.Status.CONFLICT,
+                                    EntityMessages.EM_ENTITY_ALREADY_HISTORIZED_WITH_BUSINESS_KEY + businessKey));
                         }
                         return historize(entity, dto, historicalDTO.getEndValidityDate()).onItem().transform(mapper::toDto);
                     }

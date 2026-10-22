@@ -69,6 +69,15 @@ public class AbstractEntityReactiveResource<ENTITY extends AbstractEntity, DTO e
         return service.patch(dto);
     }
 
+    public Uni<DTO> patchByBusinessKey(String businessKey, DTO dto) {
+        dto.setBusinessKey(businessKey); //Ensure BusinessKey
+        return service.patchByBusinessKey(businessKey, dto);
+    }
+
+    public Uni<Void> delete(String id) {
+        return service.deleteById(id);
+    }
+
     public Uni<Void> deleteByBusinessKey(String businessKey) {
         return service.deleteByBusinessKey(businessKey);
     }

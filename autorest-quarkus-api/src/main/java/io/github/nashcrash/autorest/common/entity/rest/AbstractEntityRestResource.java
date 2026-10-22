@@ -62,6 +62,15 @@ public class AbstractEntityRestResource<ENTITY extends AbstractEntity, DTO exten
         return service.patch(dto);
     }
 
+    public DTO patchByBusinessKey(String businessKey, DTO dto) {
+        dto.setBusinessKey(businessKey); //Ensure BusinessKey
+        return service.patchByBusinessKey(businessKey, dto);
+    }
+
+    public void delete(String id) {
+        service.deleteById(id);
+    }
+
     public void deleteByBusinessKey(String businessKey) {
         service.deleteByBusinessKey(businessKey);
     }

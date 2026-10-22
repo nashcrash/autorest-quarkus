@@ -27,6 +27,8 @@ public interface AbstractEntityRestService<ENTITY extends AbstractEntity, DTO ex
 
     DTO patch(DTO dto);
 
+    DTO patchByBusinessKey(String businessKey, DTO dto);
+
     /**
      * Physically deletes a single version. Not exposed by the generated REST API: expose it from
      * your own controller if you need it.

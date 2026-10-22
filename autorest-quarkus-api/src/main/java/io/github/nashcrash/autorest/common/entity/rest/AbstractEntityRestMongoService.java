@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Slf4j
-public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityRestService<ENTITY, DTO> {
+public class AbstractEntityRestMongoService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityRestService<ENTITY, DTO> {
 
     @Inject
     ObjectMapper objectMapper;
@@ -114,6 +114,26 @@ public abstract class AbstractEntityRestMongoService<ENTITY extends AbstractEnti
             //If it is already historicized, there was a conflict....
             if (historicalEntity.getEndValidityDate() != null) {
                 throw new CustomException(Response.Status.CONFLICT, EntityMessages.EM_ENTITY_ALREADY_HISTORIZED_WITH_ID + dto.getId());
+            }
+            return mapper.toDto(historize(entity, dto, historicalDTO.getEndValidityDate()));
+        }
+        return mapper.toDto(applyInPlace(entity, dto));
+    }
+
+    /**
+     * Patches one specific version, identified by its businessKey. A historical entity is versioned:
+     * the targeted version is closed and a new open one is inserted, carrying the same business key.
+     */
+    @Transactional
+    public DTO patchByBusinessKey(String businessKey, DTO dto) {
+        ENTITY entity = repository.findCurrentByBusinessKey(businessKey).orElse(null);
+        if (entity == null)
+            throw new CustomException(Response.Status.NOT_FOUND, EntityMessages.EM_ENTITY_NOT_FOUND_WITH_BUSINESS_KEY + businessKey);
+
+        if (entity instanceof AbstractEntityHistorical historicalEntity && dto instanceof AbstractHistoricalDTO historicalDTO) {
+            //If it is already historicized, there was a conflict....
+            if (historicalEntity.getEndValidityDate() != null) {
+                throw new CustomException(Response.Status.CONFLICT, EntityMessages.EM_ENTITY_ALREADY_HISTORIZED_WITH_BUSINESS_KEY + businessKey);
             }
             return mapper.toDto(historize(entity, dto, historicalDTO.getEndValidityDate()));
         }

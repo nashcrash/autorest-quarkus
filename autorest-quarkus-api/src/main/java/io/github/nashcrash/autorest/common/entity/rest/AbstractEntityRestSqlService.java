@@ -2,7 +2,6 @@ package io.github.nashcrash.autorest.common.entity.rest;
 
 import io.github.nashcrash.autorest.common.entity.*;
 import io.github.nashcrash.autorest.common.exception.CustomException;
-import io.github.nashcrash.autorest.common.util.PipelineUtils;
 import io.github.nashcrash.autorest.common.util.SortUtils;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
@@ -15,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 public abstract class AbstractEntityRestSqlService<ENTITY extends AbstractEntity, DTO extends AbstractDTO> implements AbstractEntityRestService<ENTITY, DTO> {
@@ -102,6 +102,26 @@ public abstract class AbstractEntityRestSqlService<ENTITY extends AbstractEntity
             //If it is already historicized, there was a conflict....
             if (historicalEntity.getEndValidityDate() != null) {
                 throw new CustomException(Response.Status.CONFLICT, EntityMessages.EM_ENTITY_ALREADY_HISTORIZED_WITH_ID + dto.getId());
+            }
+            return mapper.toDto(historize(entity, dto, historicalDTO.getEndValidityDate()));
+        }
+        return mapper.toDto(applyInPlace(entity, dto));
+    }
+
+    /**
+     * Patches one specific version, identified by its businessKey. A historical entity is versioned:
+     * the targeted version is closed and a new open one is inserted, carrying the same business key.
+     */
+    @Transactional
+    public DTO patchByBusinessKey(String businessKey, DTO dto) {
+        ENTITY entity = repository.findCurrentByBusinessKey(businessKey).orElse(null);
+        if (entity == null)
+            throw new CustomException(Response.Status.NOT_FOUND, EntityMessages.EM_ENTITY_NOT_FOUND_WITH_BUSINESS_KEY + businessKey);
+
+        if (entity instanceof AbstractEntityHistorical historicalEntity && dto instanceof AbstractHistoricalDTO historicalDTO) {
+            //If it is already historicized, there was a conflict....
+            if (historicalEntity.getEndValidityDate() != null) {
+                throw new CustomException(Response.Status.CONFLICT, EntityMessages.EM_ENTITY_ALREADY_HISTORIZED_WITH_BUSINESS_KEY + businessKey);
             }
             return mapper.toDto(historize(entity, dto, historicalDTO.getEndValidityDate()));
         }

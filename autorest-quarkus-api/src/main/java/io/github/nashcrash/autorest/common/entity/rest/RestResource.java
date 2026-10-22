@@ -88,6 +88,25 @@ public interface RestResource<DTO> {
     )
     DTO patch(@Valid @ConvertGroup(from = Default.class, to = PatchValidator.class) DTO dto);
 
+    @PATCH
+    @Path("/businessKey/{businessKey}")
+    @Blocking
+    @Operation(
+            summary = "Update only an existing resource, ignoring null fields"
+    )
+    @APIResponse(
+            responseCode = "200",
+            description = "Resource updated successfully"
+    )
+    DTO patchByBusinessKey(@PathParam("businessKey") String businessKey, @Valid @ConvertGroup(from = Default.class, to = PatchValidator.class) DTO dto);
+
+    @DELETE
+    @Path("/{id}")
+    @Operation(
+            summary = "Delete a resource by id: a historical entity is closed, not removed"
+    )
+    void delete(@PathParam("id") String id);
+
     @DELETE
     @Path("/businessKey/{businessKey}")
     @Operation(

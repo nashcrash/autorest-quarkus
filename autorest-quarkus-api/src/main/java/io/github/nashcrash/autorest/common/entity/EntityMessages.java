@@ -9,6 +9,7 @@ public final class EntityMessages {
     public static final String EM_ENTITY_NOT_FOUND_WITH_ID = "Entity not found with id: ";
     public static final String EM_ENTITY_NOT_FOUND_WITH_BUSINESS_KEY = "Entity not found with business key: ";
     public static final String EM_ENTITY_ALREADY_HISTORIZED_WITH_ID = "Entity already historized with id: ";
+    public static final String EM_ENTITY_ALREADY_HISTORIZED_WITH_BUSINESS_KEY = "Entity already historized with business key: ";
     public static final String EM_BUSINESS_KEY_DUPLICATED = "Business key already in use: ";
     public static final String EM_BUSINESS_KEY_IMMUTABLE = "Business key cannot be modified, it is derived from the declared business key fields: ";
     public static final String EM_BUSINESS_KEY_REQUIRED = "Business key is required";
