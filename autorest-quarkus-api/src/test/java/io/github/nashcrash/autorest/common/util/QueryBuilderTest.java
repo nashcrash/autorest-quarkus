@@ -14,7 +14,7 @@ public class QueryBuilderTest {
     @Test
     public void test_Mongo_HistoricalReference() {
         Date referenceDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse("2026-03-09T13:12:45.480+01:00", new ParsePosition(0));
-        String expected = "{code: \"PIPPO\",description: {$regex: \".*aaa.*\"},start: {$lte: ISODate(\"2026-03-09T13:12:45.480+01:00\")},\"$or\": [ {end: {$gt: ISODate(\"2026-03-09T13:12:45.480+01:00\")}},{end: null} ]}";
+        String expected = "{$and: [{code: \"PIPPO\"},{description: {$regex: \".*aaa.*\"}},{start: {$lte: ISODate(\"2026-03-09T13:12:45.480+01:00\")}},{\"$or\": [ {$and: [{end: {$gt: ISODate(\"2026-03-09T13:12:45.480+01:00\")}}]},{$and: [{end: null}]} ]}]}";
         String query = QueryBuilder
                 .getMongoQueryBuilder()
                 .andEq("code", "PIPPO")
@@ -27,7 +27,7 @@ public class QueryBuilderTest {
     @Test
     public void test_Mongo_HistoricalReference2() {
         Date referenceDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse("2026-03-09T13:12:45.480+01:00", new ParsePosition(0));
-        String expected = "{code: \"PIPPO\",description: {$regex: \"\\.\\*aaa\\.\\*\"},start: {$lte: ISODate(\"2026-03-09T13:12:45.480+01:00\")},\"$or\": [ {end: {$gt: ISODate(\"2026-03-09T13:12:45.480+01:00\")}},{end: null} ]}";
+        String expected = "{$and: [{code: \"PIPPO\"},{description: {$regex: \"\\.\\*aaa\\.\\*\"}},{start: {$lte: ISODate(\"2026-03-09T13:12:45.480+01:00\")}},{\"$or\": [ {$and: [{end: {$gt: ISODate(\"2026-03-09T13:12:45.480+01:00\")}}]},{$and: [{end: null}]} ]}]}";
         String query = QueryBuilder
                 .getMongoQueryBuilder()
                 .andEq("code", "PIPPO")
